@@ -1,0 +1,1 @@
+Add <script src="js/_search-fix.js"></script> after <script src="js/main.js"></script> in your HTML so the search submit handler is loaded.
