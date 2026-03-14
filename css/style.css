@@ -305,6 +305,12 @@ ol {
 	display: inline-block;
 }
 
+.header__logo img {
+	max-height: 40px;
+	height: auto;
+	width: auto;
+}
+
 .header__menu {
 	padding: 30px 0 27px;
 }
