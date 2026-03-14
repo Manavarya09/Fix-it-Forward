@@ -207,12 +207,12 @@
         max: maxPrice,
         values: [minPrice, maxPrice],
         slide: function (event, ui) {
-            minamount.val('$' + ui.values[0]);
-            maxamount.val('$' + ui.values[1]);
+            minamount.val(CURRENCY_PREFIX + ui.values[0]);
+            maxamount.val(CURRENCY_PREFIX + ui.values[1]);
             }
         });
-        minamount.val('$' + rangeSlider.slider("values", 0));
-        maxamount.val('$' + rangeSlider.slider("values", 1));
+        minamount.val(CURRENCY_PREFIX + rangeSlider.slider("values", 0));
+        maxamount.val(CURRENCY_PREFIX + rangeSlider.slider("values", 1));
     }
 
     /*------------------
@@ -268,6 +268,13 @@
     /*-------------------
 		Cart & Wishlist Logic
 	--------------------- */
+    var CURRENCY = 'AED';
+    var CURRENCY_PREFIX = CURRENCY + ' ';
+
+    function formatCurrency(value) {
+        return CURRENCY_PREFIX + (parseFloat(value) || 0).toFixed(1);
+    }
+
     var cart = JSON.parse(localStorage.getItem('cart')) || [];
     var wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 
@@ -285,8 +292,16 @@
         $('.icon_heart_alt').siblings('.tip').text(wishlistCount);
     }
 
-    function saveCart() { localStorage.setItem('cart', JSON.stringify(cart)); updateCounts(); }
-    function saveWishlist() { localStorage.setItem('wishlist', JSON.stringify(wishlist)); updateCounts(); }
+    function saveCart() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCounts();
+        if ($('.shop-cart').length > 0 && !$('.wishlist-page').length) renderCartPage();
+    }
+    function saveWishlist() {
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+        updateCounts();
+        if ($('.wishlist-page').length > 0) renderWishlistPage();
+    }
 
     function addToCart(product) {
         var existing = cart.find(item => item.name === product.name);
@@ -308,7 +323,48 @@
     function removeFromWishlist(productName) {
         wishlist = wishlist.filter(item => item.name !== productName);
         saveWishlist();
-        if ($('.wishlist-page').length > 0) renderWishlistPage();
+    }
+
+    function updateCartTotals() {
+        var subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        $('.cart-subtotal').text(formatCurrency(subtotal));
+        $('.cart-total').text(formatCurrency(subtotal));
+    }
+
+    function renderCartPage() {
+        var $tbody = $('.shop__cart__table tbody');
+        if (!$tbody.length) return;
+
+        $tbody.empty();
+        if (cart.length === 0) {
+            $tbody.append('<tr class="cart-empty-row"><td colspan="5" class="text-center">Your cart is empty.</td></tr>');
+            updateCartTotals();
+            return;
+        }
+
+        cart.forEach(function(item) {
+            var total = item.price * item.quantity;
+            var row =
+                '<tr data-product-name="' + item.name.replace(/"/g, '&quot;') + '">' +
+                    '<td class="cart__product__item">' +
+                        '<img src="' + item.image + '" alt="">' +
+                        '<div class="cart__product__item__title"><h6>' + item.name + '</h6></div>' +
+                    '</td>' +
+                    '<td class="cart__price">' + formatCurrency(item.price) + '</td>' +
+                    '<td class="cart__quantity"><div class="pro-qty"><input type="text" class="cart-qty-input" value="' + item.quantity + '"></div></td>' +
+                    '<td class="cart__total">' + formatCurrency(total) + '</td>' +
+                    '<td class="cart__close"><span class="icon_close cart-remove" data-name="' + item.name + '"></span></td>' +
+                '</tr>';
+            $tbody.append(row);
+        });
+
+        initQuantityButtons();
+        updateCartTotals();
+    }
+
+    function removeFromCart(productName) {
+        cart = cart.filter(item => item.name !== productName);
+        saveCart();
     }
 
     function initShopPage() {
@@ -343,7 +399,7 @@
                             <img src="${item.image}" alt="" style="max-width: 90px;">
                             <div class="cart__product__item__title"><h6>${item.name}</h6></div>
                         </td>
-                        <td class="cart__price">$ ${item.price.toFixed(1)}</td>
+                        <td class="cart__price">${formatCurrency(item.price)}</td>
                         <td class="cart__total"><a href="#" class="site-btn add-to-cart-from-wishlist" data-name="${item.name}">Add to Cart</a></td>
                         <td class="cart__close"><span class="icon_close" data-name="${item.name}"></span></td>
                     </tr>`;
@@ -392,9 +448,10 @@
                     };
                 }
 
+                window.currentProduct = p;
                 $('.breadcrumb__links span').text(p.name);
                 $('.product__details__text h3').html(p.name + ' <span>Brand: ' + p.brand + '</span>');
-                $('.product__details__price').text('$ ' + p.price.toFixed(1));
+                $('.product__details__price').text(formatCurrency(p.price));
                 $('.product__details__tab #tabs-1').html('<h6>Description</h6><p>' + p.description + '</p>');
                 
                 // Update images if we have them
@@ -423,7 +480,7 @@
                 }
             }
             if ($('.shop-cart').length > 0 && !$('.wishlist-page').length) {
-                // ... Cart page rendering (already implemented)
+                renderCartPage();
             }
             if ($('.wishlist-page').length > 0) renderWishlistPage();
             initShopPage();
@@ -457,7 +514,7 @@
         e.preventDefault();
         var $item = $(this).closest('.product__item');
         var name = $item.find('.product__item__text h6 a').text();
-        var price = $item.find('.product__price').clone().children().remove().end().text().replace('$', '').trim();
+        var price = parseFloat($item.find('.product__price').clone().children().remove().end().text().replace(/[^0-9\.]/g, '').trim()) || 0;
         var img = $item.find('.product__item__pic').css('background-image').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '').replace(window.location.origin + '/', '');
         addToCart({ name: name, price: price, image: img, quantity: 1 });
     });
@@ -466,9 +523,52 @@
         e.preventDefault();
         var $item = $(this).closest('.product__item');
         var name = $item.find('.product__item__text h6 a').text();
-        var price = $item.find('.product__price').clone().children().remove().end().text().replace('$', '').trim();
+        var price = parseFloat($item.find('.product__price').clone().children().remove().end().text().replace(/[^0-9\.]/g, '').trim()) || 0;
         var img = $item.find('.product__item__pic').css('background-image').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '').replace(window.location.origin + '/', '');
         addToWishlist({ name: name, price: price, image: img });
+    });
+
+    // Cart page interactions
+    $(document).on('click', '.cart-remove', function(e) {
+        e.preventDefault();
+        removeFromCart($(this).data('name'));
+    });
+
+    $(document).on('change', '.cart-qty-input', function () {
+        var $row = $(this).closest('tr');
+        var name = $row.data('product-name');
+        var quantity = parseInt($(this).val(), 10) || 0;
+        var item = cart.find(i => i.name === name);
+        if (!item) return;
+        if (quantity <= 0) {
+            removeFromCart(name);
+            return;
+        }
+        item.quantity = quantity;
+        saveCart();
+    });
+
+    $(document).on('click', '.update-cart', function(e) {
+        e.preventDefault();
+        renderCartPage();
+    });
+
+    $(document).on('click', '.continue-shopping', function(e) {
+        e.preventDefault();
+        window.location.href = 'shop.html';
+    });
+
+    $(document).on('click', '.product__details__button .cart-btn', function(e) {
+        e.preventDefault();
+        var qty = parseInt($('.product__details__button .pro-qty input').val(), 10) || 1;
+        if (!window.currentProduct) return;
+        addToCart({
+            name: window.currentProduct.name,
+            price: window.currentProduct.price,
+            image: (window.currentProduct.images && window.currentProduct.images[0]) || '',
+            quantity: qty
+        });
+        alert(window.currentProduct.name + ' added to cart!');
     });
 
     /*-------------------
