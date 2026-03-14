@@ -252,11 +252,11 @@
     var PRODUCT_DATA = {
         'shop-1': {
             id: 'shop-1',
-            name: 'Furry hooded parka',
+            name: 'Buttons tweed blazer',
             brand: 'CozyCo',
             price: 59.0,
             compareAt: null,
-            description: 'A warm and stylish parka lined with faux fur. Perfect for winter walks and city nights.',
+            description: 'A polished tweed blazer that pairs perfectly with both trousers and skirts. Elevate your everyday style.',
             images: [
                 'img/product/details/product-1.jpg',
                 'img/product/details/product-2.jpg',
@@ -294,11 +294,11 @@
         },
         'shop-4': {
             id: 'shop-4',
-            name: 'Dark wash Xavi jeans',
+            name: 'Slim striped pocket shirt',
             brand: 'Denim Co.',
             price: 59.0,
             compareAt: null,
-            description: 'Classic dark wash jeans with a slim straight fit. Everyday comfort with premium denim.',
+            description: 'A crisp, slim-fit shirt with a subtle striped pattern and a convenient chest pocket.',
             images: [
                 'img/product/details/product-4.jpg',
                 'img/product/details/product-1.jpg',
@@ -308,11 +308,11 @@
         },
         'shop-5': {
             id: 'shop-5',
-            name: 'Ankle-cuff sandals',
+            name: 'Fit micro corduroy shirt',
             brand: 'Stride',
-            price: 49.0,
+            price: 59.0,
             compareAt: 59.0,
-            description: 'Comfortable ankle-cuff sandals made with soft leather straps and a cushioned footbed.',
+            description: 'Soft micro corduroy shirt with a tailored fit. Comfortable and versatile for everyday wear.',
             images: [
                 'img/product/details/product-2.jpg',
                 'img/product/details/product-3.jpg',
@@ -322,11 +322,11 @@
         },
         'shop-6': {
             id: 'shop-6',
-            name: 'Contrasting sunglasses',
+            name: 'Tropical Kimono',
             brand: 'ShadeCraft',
             price: 59.0,
             compareAt: null,
-            description: 'Bold frames with contrasting lenses. UV protection meets modern styling.',
+            description: 'Lightweight kimono with tropical prints. Perfect for layering over your favorite outfit.',
             images: [
                 'img/product/details/product-1.jpg',
                 'img/product/details/product-2.jpg',
