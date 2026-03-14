@@ -298,7 +298,8 @@ ol {
 }
 
 .header__logo {
-	padding: 10px 0;
+	padding: 0 0;
+	position: relative;
 }
 
 .header__logo a {
@@ -306,16 +307,21 @@ ol {
 }
 
 .header__logo img {
-		max-height: 64px;
+		max-height: 120px; /* bigger visual logo */
 		height: auto;
 		width: auto;
 		display: block;
+		margin-top: -18px; /* pull up so header doesn't grow */
 }
 
 /* Keep logo reasonable on small screens */
+@media (max-width: 992px) {
+	.header__logo img { max-height: 72px; margin-top: -8px; }
+}
+
 @media (max-width: 768px) {
-	.header__logo { padding: 8px 0; }
-	.header__logo img { max-height: 40px; }
+	.header__logo { padding: 6px 0; }
+	.header__logo img { max-height: 48px; margin-top: 0; }
 }
 
 .header__menu {
