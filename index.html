@@ -27,6 +27,92 @@
     <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
     <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="css/style.css" type="text/css">
+    <style>
+        body {
+            margin: 0;
+            background: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .scroll-sequence-section {
+            position: relative;
+            height: 340vh;
+            background: #f7f3ef;
+        }
+
+        .scroll-container {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7f3ef;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        #scrollCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .scroll-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(6, 10, 14, 0.05), rgba(6, 10, 14, 0.45));
+            color: #fbfbfb;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(32px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+
+        .scroll-overlay.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scroll-overlay__title {
+            font-size: clamp(1.7rem, 2vw, 2.8rem);
+            letter-spacing: 0.3rem;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .scroll-overlay__tag {
+            font-size: clamp(1.3rem, 1.8vw, 2rem);
+            font-weight: 500;
+        }
+
+        .scroll-overlay__stores {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+        }
+
+        .scroll-sequence-section + .trend {
+            position: relative;
+            z-index: 2;
+            background: #fff;
+        }
+        .categories__text h1 {
+            color: #000 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -410,6 +496,21 @@
     </div>
 </section>
 <!-- Banner Section End -->
+
+<!-- Scroll Animation Begin -->
+<section class="scroll-sequence-section" id="scroll-sequence">
+    <div class="scroll-container">
+        <canvas id="scrollCanvas" width="1920" height="1080"></canvas>
+        <div class="scroll-overlay">
+            <div class="scroll-overlay__title">Novo Thread</div>
+            <div class="scroll-overlay__tag">Coming soon in Play Store & App Store</div>
+            <div class="scroll-overlay__stores">
+                <span>Discover indentient fashion</span>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Scroll Animation End -->
 
 <!-- Trend Section Begin -->
 <section class="trend spad">
@@ -817,6 +918,7 @@
 <script src="js/jquery.nicescroll.min.js"></script>
 <script src="js/products.js"></script>
 <script src="js/main.js"></script>
+<script src="js/_search-fix.js"></script>
 
 <!-- Modern animation + transition libraries -->
 <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
@@ -828,6 +930,96 @@
 <script src="https://unpkg.com/vanilla-tilt@1.7.2/dist/vanilla-tilt.min.js"></script>
 
 <script src="js/app.js"></script>
+<script>
+    (function () {
+        const sequenceSection = document.getElementById('scroll-sequence');
+        const canvas = document.getElementById('scrollCanvas');
+        if (!canvas || !sequenceSection) return;
+
+        const context = canvas.getContext('2d');
+        if (!context) return;
+
+        const frameCount = 240;
+        const image = new Image();
+        let lastFrame = 0;
+
+        const currentFrame = (index) => `frames/frame_${String(index).padStart(4, '0')}.png`;
+
+        const render = () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            if (!image.naturalWidth || !image.naturalHeight) return;
+
+            const imageAspect = image.naturalWidth / image.naturalHeight;
+            const canvasAspect = canvas.width / canvas.height;
+
+            let drawWidth;
+            let drawHeight;
+            if (imageAspect > canvasAspect) {
+                drawHeight = canvas.height;
+                drawWidth = drawHeight * imageAspect;
+            } else {
+                drawWidth = canvas.width;
+                drawHeight = drawWidth / imageAspect;
+            }
+
+            const offsetX = (canvas.width - drawWidth) / 2;
+            const offsetY = (canvas.height - drawHeight) / 2;
+            context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+        };
+
+        const resizeCanvas = () => {
+            const dpr = window.devicePixelRatio || 1;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            canvas.width = Math.floor(viewportWidth * dpr);
+            canvas.height = Math.floor(viewportHeight * dpr);
+            canvas.style.width = `${viewportWidth}px`;
+            canvas.style.height = `${viewportHeight}px`;
+            render();
+        };
+
+        const updateFrame = (index) => {
+            if (index === lastFrame) return;
+            lastFrame = index;
+            image.src = currentFrame(index);
+        };
+
+        image.onload = render;
+        resizeCanvas();
+        updateFrame(1);
+
+        const overlay = document.querySelector('.scroll-overlay');
+
+        const onScroll = () => {
+            const sectionTop = sequenceSection.offsetTop;
+            const sectionHeight = sequenceSection.offsetHeight;
+            const activeScrollDistance = Math.max(sectionHeight - window.innerHeight, 1);
+            const scrollWithinSection = window.scrollY - sectionTop;
+            const scrollFraction = Math.min(1, Math.max(0, scrollWithinSection / activeScrollDistance));
+            const frameIndex = Math.min(frameCount, Math.max(1, Math.ceil(scrollFraction * frameCount)));
+            updateFrame(frameIndex);
+
+            if (scrollWithinSection > 120 && overlay?.classList.contains('visible')) {
+                overlay.classList.remove('visible');
+            }
+        };
+
+        window.addEventListener('scroll', onScroll);
+        window.addEventListener('resize', resizeCanvas);
+        onScroll();
+
+        for (let i = 1; i <= frameCount; i += 1) {
+            const preload = new Image();
+            preload.src = currentFrame(i);
+        }
+
+        if (overlay) {
+            setTimeout(() => overlay.classList.add('visible'), 3200);
+            setTimeout(() => overlay.classList.remove('visible'), 7500);
+        }
+    })();
+</script>
 </body>
 
 </html>
