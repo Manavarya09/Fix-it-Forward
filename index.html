@@ -270,131 +270,98 @@
             <div class="col-lg-8 col-md-8">
                 <ul class="filter__controls">
                     <li class="active" data-filter="*">All</li>
-                    // Smooth frame-by-frame scroll animation (rAF driven)
-                    const frameCount = 240;
-                    const image = new Image();
-                    let lastFrame = 0;
-
-                    // fall back to video quickly on slow networks or low-memory devices
-                    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                    const isSlowNetwork = connection && (connection.effectiveType || '').includes && (connection.effectiveType.includes('2g') || connection.saveData === true);
-                    const shouldUseVideo = isSlowNetwork;
-
-                    const currentFrame = (index) => `frames/frame_${String(index).padStart(4, '0')}.png`;
-
-                    // Use async decoding where available
-                    image.decoding = 'async';
-                    try { image.loading = 'lazy'; } catch(e){}
-
-                    const render = () => {
-                        context.clearRect(0, 0, canvas.width, canvas.height);
-                        if (!image.naturalWidth || !image.naturalHeight) return;
-
-                        const imageAspect = image.naturalWidth / image.naturalHeight;
-                        const canvasAspect = canvas.width / canvas.height;
-
-                        let drawWidth;
-                        let drawHeight;
-                        if (imageAspect > canvasAspect) {
-                            drawHeight = canvas.height;
-                            drawWidth = drawHeight * imageAspect;
-                        } else {
-                            drawWidth = canvas.width;
-                            drawHeight = drawWidth / imageAspect;
-                        }
-
-                        const offsetX = (canvas.width - drawWidth) / 2;
-                        const offsetY = (canvas.height - drawHeight) / 2;
-                        context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
-                    };
-
-                    const resizeCanvas = () => {
-                        const dpr = Math.min(2, window.devicePixelRatio || 1); // cap DPR for performance
-                        const viewportWidth = window.innerWidth;
-                        const viewportHeight = window.innerHeight;
-
-                        canvas.width = Math.floor(viewportWidth * dpr);
-                        canvas.height = Math.floor(viewportHeight * dpr);
-                        canvas.style.width = `${viewportWidth}px`;
-                        canvas.style.height = `${viewportHeight}px`;
-                        render();
-                    };
-
-                    const updateFrame = (index) => {
-                        if (index === lastFrame) return;
-                        lastFrame = index;
-                        // set src — browser will handle caching; avoid aggressive preloads
-                        image.src = currentFrame(index);
-                    };
-
-                    // If on a slow network, show video fallback immediately
-                    if (shouldUseVideo) {
-                        const vid = document.getElementById('scrollVideo');
-                        if (vid) {
-                            canvas.style.display = 'none';
-                            vid.style.display = 'block';
-                        }
-                    } else {
-                        // rAF-driven scroll update — coalesces updates and keeps UI thread smooth
-                        let latestScrollY = window.scrollY;
-                        let ticking = false;
-
-                        const onScroll = () => {
-                            latestScrollY = window.scrollY;
-                            requestTick();
-                        };
-
-                        const requestTick = () => {
-                            if (!ticking) {
-                                requestAnimationFrame(update);
-                                ticking = true;
-                            }
-                        };
-
-                        const update = () => {
-                            ticking = false;
-                            const sectionTop = sequenceSection.offsetTop;
-                            const sectionHeight = sequenceSection.offsetHeight;
-                            const activeScrollDistance = Math.max(sectionHeight - window.innerHeight, 1);
-                            const scrollWithinSection = latestScrollY - sectionTop;
-                            const scrollFraction = Math.min(1, Math.max(0, scrollWithinSection / activeScrollDistance));
-                            // reduce frame rate on small viewports to keep CPU low
-                            const effectiveFrameCount = (window.innerWidth < 800) ? Math.min(120, frameCount) : frameCount;
-                            const frameIndex = Math.min(effectiveFrameCount, Math.max(1, Math.ceil(scrollFraction * effectiveFrameCount)));
-                            updateFrame(frameIndex);
-
-                            const overlay = document.querySelector('.scroll-overlay');
-                            if (scrollWithinSection > 120 && overlay?.classList.contains('visible')) {
-                                overlay.classList.remove('visible');
-                            }
-                        };
-
-                        image.onload = render;
-                        image.onerror = function(){
-                            // frames failed to load — fallback to scroll video
-                            try {
-                                const vid = document.getElementById('scrollVideo');
-                                if (vid) {
-                                    canvas.style.display = 'none';
-                                    vid.style.display = 'block';
-                                    window.removeEventListener('scroll', onScroll);
-                                }
-                            } catch(e) {}
-                        };
-
-                        resizeCanvas();
-                        updateFrame(1);
-
-                        window.addEventListener('scroll', onScroll, { passive: true });
-                        window.addEventListener('resize', resizeCanvas);
-                        requestTick();
-                    }
-
-                    const overlay = document.querySelector('.scroll-overlay');
-                    if (overlay) {
-                        setTimeout(() => overlay.classList.add('visible'), 3200);
-                        setTimeout(() => overlay.classList.remove('visible'), 7500);
-                    }
+                    <li data-filter=".women">Women’s</li>
+                    <li data-filter=".men">Men’s</li>
+                    <li data-filter=".kid">Kid’s</li>
+                    <li data-filter=".accessories">Accessories</li>
+                    <li data-filter=".cosmetic">Cosmetics</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row property__gallery">
+            <div class="col-lg-3 col-md-4 col-sm-6 mix women">
+                <div class="product__item" data-product-id="shop-1">
+                    <div class="product__item__pic set-bg" data-setbg="img/product/product-1.jpg" data-hoverbg="img/product/details/product-1.jpg">
+                        <div class="label new">New</div>
+                        <ul class="product__hover">
+                            <li><a href="img/product/product-1.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                            <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                            <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                        </ul>
+                    </div>
+                    <div class="product__item__text">
+                        <h6><a href="product-details.html?id=shop-1">Buttons tweed blazer</a></h6>
+                        <div class="rating">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                        </div>
+                        <div class="product__price">AED 59.0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6 mix men">
+                <div class="product__item" data-product-id="shop-2">
+                    <div class="product__item__pic set-bg" data-setbg="img/product/product-2.jpg" data-hoverbg="img/product/details/product-2.jpg">
+                        <ul class="product__hover">
+                            <li><a href="img/product/product-2.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                            <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                            <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                        </ul>
+                    </div>
+                    <div class="product__item__text">
+                        <h6><a href="product-details.html?id=shop-2">Flowy striped skirt</a></h6>
+                        <div class="rating">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                        </div>
+                        <div class="product__price">AED 49.0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6 mix accessories">
+                <div class="product__item" data-product-id="shop-8">
+                    <div class="product__item__pic set-bg" data-setbg="img/product/product-3.jpg" data-hoverbg="img/product/details/product-3.jpg">
+                        <div class="label stockout">out of stock</div>
+                        <ul class="product__hover">
+                            <li><a href="img/product/product-3.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                            <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                            <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                        </ul>
+                    </div>
+                    <div class="product__item__text">
+                        <h6><a href="product-details.html?id=shop-8">Cotton T-Shirt</a></h6>
+                        <div class="rating">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                        </div>
+                        <div class="product__price">AED 59.0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6 mix cosmetic">
+                <div class="product__item" data-product-id="shop-4">
+                    <div class="product__item__pic set-bg" data-setbg="img/product/product-4.jpg" data-hoverbg="img/product/details/product-4.jpg">
+                        <ul class="product__hover">
+                            <li><a href="img/product/product-4.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
+                            <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                            <li><a href="#"><span class="icon_bag_alt"></span></a></li>
+                        </ul>
+                    </div>
+                    <div class="product__item__text">
+                        <h6><a href="product-details.html?id=shop-4">Slim striped pocket shirt</a></h6>
+                        <div class="rating">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
                             <i class="fa fa-star"></i>
                             <i class="fa fa-star"></i>
                         </div>
