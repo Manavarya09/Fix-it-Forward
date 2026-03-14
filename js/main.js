@@ -279,6 +279,18 @@
     var wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
     var apiUser = null;
 
+    // Simple toast popup
+    function showToast(message, opts){
+        opts = opts || {};
+        var el = document.createElement('div');
+        el.className = 'fif-toast';
+        el.textContent = message;
+        el.style.cssText = 'position:fixed;right:20px;top:20px;background:#fff;border-radius:8px;padding:10px 14px;box-shadow:0 6px 18px rgba(0,0,0,0.12);z-index:99999;font-family:Inter,Segoe UI,Arial,sans-serif';
+        document.body.appendChild(el);
+        setTimeout(function(){ el.style.opacity = '0'; el.style.transform='translateY(-10px)'; }, (opts.duration||2000));
+        setTimeout(function(){ try{ el.remove(); } catch(e){} }, (opts.duration||2000)+400);
+    }
+
     // PRODUCT_DATA is now loaded from products.js (global)
     
     function loadProductData(callback) {
@@ -321,6 +333,8 @@
         if (existing) { existing.quantity += product.quantity || 1; } 
         else { cart.push({ product_id: pid, name: product.name, price: parseFloat(product.price), image: product.image, quantity: product.quantity || 1 }); }
         saveCart();
+        // cute popup
+        try { showToast((product.name||'Item') + ' added to cart! ❤️'); } catch(e){}
     }
 
     function addToWishlist(product) {

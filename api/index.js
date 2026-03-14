@@ -34,6 +34,18 @@ function authMiddleware(req, res, next) {
   }
 }
 
+function optionalAuthMiddleware(req, res, next) {
+  const token = req.cookies && req.cookies['fif_token'];
+  if (!token) return next();
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+  } catch (err) {
+    // ignore invalid token for optional flow
+  }
+  return next();
+}
+
 /* Products */
 app.get('/api/products', (req, res) => {
   const q = (req.query.q || req.query.search || '').trim().toLowerCase();
@@ -109,15 +121,60 @@ app.post('/api/cart', authMiddleware, (req, res) => {
 });
 
 /* Orders */
-app.post('/api/orders', authMiddleware, (req, res) => {
+app.post('/api/orders', optionalAuthMiddleware, (req, res) => {
   const items = req.body.items || [];
-  const total = parseFloat(req.body.total || 0);
-  const id = uuidv4();
-  const now = Date.now();
-  db.prepare('INSERT INTO orders (id,user_id,items,total,status,created_at) VALUES (?,?,?,?,?,?)').run(id, req.user.id, JSON.stringify(items), total, 'pending', now);
-  // clear cart
-  db.prepare('DELETE FROM carts WHERE user_id = ?').run(req.user.id);
-  res.json({ id, status: 'pending' });
+  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'no_items' });
+
+  // If guest (no req.user), require contact info
+  const userId = req.user ? req.user.id : null;
+  if (!userId) {
+    const contact = req.body.contact || {};
+    if (!contact.name || !contact.email) return res.status(400).json({ error: 'guest_contact_required' });
+  }
+
+  // Compute server-side total and validate products + inventory, then insert order atomically
+  try {
+    const now = Date.now();
+    const orderId = uuidv4();
+
+    // calculate server total and verify products exist
+    let serverTotal = 0;
+    for (const it of items) {
+      if (!it.product_id || !it.quantity) return res.status(400).json({ error: 'invalid_item' });
+      const prod = db.prepare('SELECT price FROM products WHERE id = ?').get(it.product_id);
+      if (!prod) return res.status(400).json({ error: 'product_not_found', product_id: it.product_id });
+      serverTotal += (parseFloat(prod.price) || 0) * Number(it.quantity || 0);
+    }
+
+    const txn = db.transaction((items, orderId, userId, total, ts) => {
+      // check and decrement inventory
+      for (const it of items) {
+        const inv = db.prepare('SELECT quantity FROM inventory WHERE product_id = ?').get(it.product_id);
+        const have = inv ? inv.quantity : 0;
+        if (have < it.quantity) {
+          throw new Error('out_of_stock:' + it.product_id);
+        }
+        db.prepare('UPDATE inventory SET quantity = quantity - ? WHERE product_id = ?').run(it.quantity, it.product_id);
+      }
+
+      // insert order (user_id can be null for guest)
+      db.prepare('INSERT INTO orders (id,user_id,items,total,status,created_at) VALUES (?,?,?,?,?,?)')
+        .run(orderId, userId, JSON.stringify(items), total, 'pending', ts);
+
+      // clear cart for authenticated users
+      if (userId) db.prepare('DELETE FROM carts WHERE user_id = ?').run(userId);
+    });
+
+    txn(items, orderId, userId, serverTotal, now);
+    res.json({ id: orderId, status: 'pending', total: serverTotal });
+  } catch (err) {
+    if (err && typeof err.message === 'string' && err.message.indexOf('out_of_stock:') === 0) {
+      const pid = err.message.split(':')[1];
+      return res.status(400).json({ error: 'out_of_stock', product_id: pid });
+    }
+    console.error('order error', err && err.stack ? err.stack : err);
+    return res.status(500).json({ error: 'order_failed' });
+  }
 });
 
 app.get('/api/orders/:id', authMiddleware, (req, res) => {
