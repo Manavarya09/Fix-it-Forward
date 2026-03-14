@@ -251,18 +251,12 @@
     var cart = JSON.parse(localStorage.getItem('cart')) || [];
     var wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
 
-    // Product catalog
-    var PRODUCT_DATA = {
-        'shop-1': { id: 'shop-1', name: 'Buttons tweed blazer', brand: 'CozyCo', price: 59.0, compareAt: null, description: 'A polished tweed blazer that pairs perfectly with both trousers and skirts.', images: ['img/product/details/product-1.jpg', 'img/product/details/product-2.jpg', 'img/product/details/product-3.jpg', 'img/product/details/product-4.jpg'] },
-        'shop-2': { id: 'shop-2', name: 'Flowy striped skirt', brand: 'Luna Threads', price: 49.0, compareAt: null, description: 'Lightweight midi skirt with a relaxed fit. Perfect for sunny days.', images: ['img/product/details/product-2.jpg', 'img/product/details/product-1.jpg', 'img/product/details/product-4.jpg', 'img/product/details/product-3.jpg'] },
-        'shop-3': { id: 'shop-3', name: 'Croc-effect bag', brand: 'Urban Luxe', price: 59.0, compareAt: null, description: 'Sleek croc-effect bag with ample interior storage.', images: ['img/product/details/product-3.jpg', 'img/product/details/product-4.jpg', 'img/product/details/product-1.jpg', 'img/product/details/product-2.jpg'] },
-        'shop-4': { id: 'shop-4', name: 'Slim striped pocket shirt', brand: 'Denim Co.', price: 59.0, compareAt: null, description: 'A crisp, slim-fit shirt with a subtle striped pattern.', images: ['img/product/details/product-4.jpg', 'img/product/details/product-1.jpg', 'img/product/details/product-2.jpg', 'img/product/details/product-3.jpg'] },
-        'shop-5': { id: 'shop-5', name: 'Fit micro corduroy shirt', brand: 'Stride', price: 59.0, compareAt: 59.0, description: 'Soft micro corduroy shirt with a tailored fit.', images: ['img/product/details/product-2.jpg', 'img/product/details/product-3.jpg', 'img/product/details/product-4.jpg', 'img/product/details/product-1.jpg'] },
-        'shop-6': { id: 'shop-6', name: 'Tropical Kimono', brand: 'ShadeCraft', price: 59.0, compareAt: null, description: 'Lightweight kimono with tropical prints.', images: ['img/product/details/product-1.jpg', 'img/product/details/product-2.jpg', 'img/product/details/product-3.jpg', 'img/product/details/product-4.jpg'] },
-        'shop-7': { id: 'shop-7', name: 'Circular pendant earrings', brand: 'Aurora', price: 59.0, compareAt: null, description: 'Lightweight circular pendants for everyday elegance.', images: ['img/product/details/product-3.jpg', 'img/product/details/product-4.jpg', 'img/product/details/product-1.jpg', 'img/product/details/product-2.jpg'] },
-        'shop-8': { id: 'shop-8', name: 'Cotton T-Shirt', brand: 'Basics', price: 59.0, compareAt: null, description: 'Soft cotton tee with a relaxed fit.', images: ['img/product/details/product-4.jpg', 'img/product/details/product-1.jpg', 'img/product/details/product-2.jpg', 'img/product/details/product-3.jpg'] },
-        'shop-9': { id: 'shop-9', name: 'Water resistant zips backpack', brand: 'GearBag', price: 49.0, compareAt: 59.0, description: 'Durable backpack with water-resistant zippers.', images: ['img/product/details/product-1.jpg', 'img/product/details/product-3.jpg', 'img/product/details/product-2.jpg', 'img/product/details/product-4.jpg'] }
-    };
+    // PRODUCT_DATA is now loaded from products.js (global)
+    
+    function loadProductData(callback) {
+        // PRODUCT_DATA is already global from products.js
+        if (callback) callback();
+    }
 
     function updateCounts() {
         var cartCount = cart.reduce((total, item) => total + item.quantity, 0);
@@ -353,29 +347,73 @@
     }
 
     function initAppUI() {
-        initQuantityButtons();
-        initBackgroundSet();
-        initMixItUp();
-        if ($('.product-details').length) {
-            // ... (Product details population logic remains similar to previous version)
-            var params = new URLSearchParams(window.location.search);
-            var id = params.get('id') || 'shop-1';
-            var p = PRODUCT_DATA[id] || PRODUCT_DATA['shop-1'];
-            $('.breadcrumb__links span').text(p.name);
-            $('.product__details__text h3').html(p.name + ' <span>Brand: ' + p.brand + '</span>');
-            $('.product__details__price').text('$ ' + p.price.toFixed(1));
-            $('.product__details__tab #tabs-1').html('<h6>Description</h6><p>' + p.description + '</p>');
-        }
-        if ($('.shop-cart').length > 0 && !$('.wishlist-page').length) {
-            // Cart page rendering (already implemented in previous version)
-        }
-        if ($('.wishlist-page').length > 0) renderWishlistPage();
-        initShopPage();
-        updateCounts();
+        loadProductData(function() {
+            initQuantityButtons();
+            initBackgroundSet();
+            initMixItUp();
+            if ($('.product-details').length) {
+                var params = new URLSearchParams(window.location.search);
+                var id = params.get('id') || 'shop-1';
+                var p = PRODUCT_DATA[id];
+                
+                // Scalability: If product not found in JSON, generate a generic one based on context
+                if (!p) {
+                    p = {
+                        name: "Product " + id,
+                        brand: "Fashion",
+                        price: 59.0,
+                        description: "A stylish addition to your wardrobe. Perfect for all seasons.",
+                        images: [
+                            "img/product/product-1.jpg",
+                            "img/product/product-2.jpg",
+                            "img/product/product-3.jpg",
+                            "img/product/product-4.jpg"
+                        ]
+                    };
+                }
+
+                $('.breadcrumb__links span').text(p.name);
+                $('.product__details__text h3').html(p.name + ' <span>Brand: ' + p.brand + '</span>');
+                $('.product__details__price').text('$ ' + p.price.toFixed(1));
+                $('.product__details__tab #tabs-1').html('<h6>Description</h6><p>' + p.description + '</p>');
+                
+                // Update images if we have them
+                if (p.images && p.images.length > 0) {
+                    var $thumbContainer = $('.product__details__pic .product__thumb');
+                    var $carousel = $('.product__details__pic__slider.owl-carousel');
+                    if ($thumbContainer.length && $carousel.length) {
+                        $thumbContainer.empty();
+                        $carousel.empty();
+                        p.images.forEach(function(src, index) {
+                            var hash = 'product-' + (index + 1);
+                            $thumbContainer.append('<a class="pt' + (index === 0 ? ' active' : '') + '" href="#' + hash + '"><img src="' + src + '" alt=""></a>');
+                            $carousel.append('<img data-hash="' + hash + '" class="product__big__img" src="' + src + '" alt="">');
+                        });
+                        
+                        // Re-init carousel
+                        if ($carousel.hasClass('owl-loaded')) { $carousel.trigger('destroy.owl.carousel'); }
+                        $carousel.owlCarousel({
+                            loop: false, margin: 0, items: 1, dots: false, nav: true,
+                            navText: ['<i class="arrow_carrot-left"></i>', '<i class="arrow_carrot-right"></i>'],
+                            smartSpeed: 1200, autoHeight: false, autoplay: false, mouseDrag: false, startPosition: 'URLHash'
+                        }).on('changed.owl.carousel', function(event) {
+                            product_thumbs(event.item.index + 1);
+                        });
+                    }
+                }
+            }
+            if ($('.shop-cart').length > 0 && !$('.wishlist-page').length) {
+                // ... Cart page rendering (already implemented)
+            }
+            if ($('.wishlist-page').length > 0) renderWishlistPage();
+            initShopPage();
+            updateCounts();
+        });
     }
 
     window.initAppUI = initAppUI;
-    $(function() { initAppUI(); });
+    // Call immediately to avoid flash of hardcoded content
+    initAppUI();
 
     // Click Handlers
 
@@ -411,6 +449,39 @@
         var price = $item.find('.product__price').clone().children().remove().end().text().replace('$', '').trim();
         var img = $item.find('.product__item__pic').css('background-image').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '').replace(window.location.origin + '/', '');
         addToWishlist({ name: name, price: price, image: img });
+    });
+
+    /*-------------------
+		Form Handlers
+	--------------------- */
+    $(document).on('submit', '.newsletter-form', function (e) {
+        e.preventDefault();
+        alert("Thank you for subscribing!");
+        $(this).find('input').val('');
+    });
+
+    $(document).on('submit', '.contact-form', function (e) {
+        e.preventDefault();
+        alert("Your message has been sent!");
+        $(this).find('input, textarea').val('');
+    });
+
+    $(document).on('submit', '.login-form', function (e) {
+        e.preventDefault();
+        alert("Login successful!");
+        window.location.href = 'index.html';
+    });
+
+    $(document).on('submit', '.register-form', function (e) {
+        e.preventDefault();
+        alert("Registration successful!");
+        window.location.href = 'index.html';
+    });
+
+    $(document).on('submit', '.discount-form', function (e) {
+        e.preventDefault();
+        alert("Coupon applied successfully!");
+        $(this).find('input').val('');
     });
 
 })(jQuery);
