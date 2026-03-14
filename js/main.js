@@ -277,6 +277,7 @@
 
     var cart = JSON.parse(localStorage.getItem('cart')) || [];
     var wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    var apiUser = null;
 
     // PRODUCT_DATA is now loaded from products.js (global)
     
@@ -296,6 +297,15 @@
         localStorage.setItem('cart', JSON.stringify(cart));
         updateCounts();
         if ($('.shop-cart').length > 0 && !$('.wishlist-page').length) renderCartPage();
+        // If user is logged in via API, persist cart server-side
+        if (apiUser) {
+            fetch('/api/cart', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: cart })
+            }).catch(()=>{});
+        }
     }
     function saveWishlist() {
         localStorage.setItem('wishlist', JSON.stringify(wishlist));
@@ -486,6 +496,19 @@
             initShopPage();
             updateCounts();
         });
+        // check API auth state and sync cart if logged in
+        fetch('/api/me', { credentials: 'include' }).then(r=>r.json()).then(d=>{
+            if (d && d.user) {
+                apiUser = d.user;
+                // try to load server cart
+                fetch('/api/cart', { credentials: 'include' }).then(r=>r.json()).then(cdata=>{
+                    if (cdata && Array.isArray(cdata.items)) {
+                        cart = cdata.items;
+                        saveCart();
+                    }
+                }).catch(()=>{});
+            }
+        }).catch(()=>{});
     }
 
     window.initAppUI = initAppUI;
