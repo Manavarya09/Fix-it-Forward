@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="ashion website">
-    <meta name="keywords" content="ashion, unica, creative, html">
+    <meta name="description" content="novo website">
+    <meta name="keywords" content="novo, unica, creative, html">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>ashion | website</title>
+    <title>novo | website</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -276,17 +276,31 @@
                                 quis, sem.</p>
                             </div>
                             <div class="tab-pane" id="tabs-3" role="tabpanel">
-                                <h6>Reviews ( 2 )</h6>
-                                <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed
-                                    quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt loret.
-                                    Neque porro lorem quisquam est, qui dolorem ipsum quia dolor si. Nemo enim ipsam
-                                    voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed quia ipsu
-                                    consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Nulla
-                                consequat massa quis enim.</p>
-                                <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget
-                                    dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes,
-                                    nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium
-                                quis, sem.</p>
+                                <h6 id="reviews-heading">Reviews ( 0 )</h6>
+                                                                <div id="product-reviews" class="review-list">
+                                                                        <!-- Reviews will be rendered here by js/product-reviews.js -->
+                                                                </div>
+                                                                <div id="review-form-wrap" class="review-form-wrap" style="margin-top:16px">
+                                                                    <h6>Add a review</h6>
+                                                                    <form id="product-review-form">
+                                                                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                                                                            <input type="text" id="reviewer-name" placeholder="Your name" style="flex:1;min-width:180px;padding:8px" required>
+                                                                            <select id="reviewer-rating" style="width:120px;padding:8px">
+                                                                                <option value="5">5 — Excellent</option>
+                                                                                <option value="4">4 — Good</option>
+                                                                                <option value="3">3 — Okay</option>
+                                                                                <option value="2">2 — Poor</option>
+                                                                                <option value="1">1 — Terrible</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div style="margin-top:8px">
+                                                                            <textarea id="reviewer-comment" placeholder="Write your review" rows="4" style="width:100%;padding:8px" required></textarea>
+                                                                        </div>
+                                                                        <div style="margin-top:8px">
+                                                                            <button type="submit" class="site-btn">Submit review</button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
                             </div>
                         </div>
                     </div>
@@ -401,7 +415,7 @@
                     <div class="instagram__item set-bg" data-setbg="img/instagram/insta-1.jpg">
                         <div class="instagram__text">
                             <i class="fa fa-instagram"></i>
-                            <a href="#">@ ashion_shop</a>
+                            <a href="#">@ novo_shop</a>
                         </div>
                     </div>
                 </div>
@@ -409,7 +423,7 @@
                     <div class="instagram__item set-bg" data-setbg="img/instagram/insta-2.jpg">
                         <div class="instagram__text">
                             <i class="fa fa-instagram"></i>
-                            <a href="#">@ ashion_shop</a>
+                            <a href="#">@ novo_shop</a>
                         </div>
                     </div>
                 </div>
@@ -417,7 +431,7 @@
                     <div class="instagram__item set-bg" data-setbg="img/instagram/insta-3.jpg">
                         <div class="instagram__text">
                             <i class="fa fa-instagram"></i>
-                            <a href="#">@ ashion_shop</a>
+                            <a href="#">@ novo_shop</a>
                         </div>
                     </div>
                 </div>
@@ -425,7 +439,7 @@
                     <div class="instagram__item set-bg" data-setbg="img/instagram/insta-4.jpg">
                         <div class="instagram__text">
                             <i class="fa fa-instagram"></i>
-                            <a href="#">@ ashion_shop</a>
+                            <a href="#">@ novo_shop</a>
                         </div>
                     </div>
                 </div>
@@ -433,7 +447,7 @@
                     <div class="instagram__item set-bg" data-setbg="img/instagram/insta-5.jpg">
                         <div class="instagram__text">
                             <i class="fa fa-instagram"></i>
-                            <a href="#">@ ashion_shop</a>
+                            <a href="#">@ novo_shop</a>
                         </div>
                     </div>
                 </div>
@@ -441,7 +455,7 @@
                     <div class="instagram__item set-bg" data-setbg="img/instagram/insta-6.jpg">
                         <div class="instagram__text">
                             <i class="fa fa-instagram"></i>
-                            <a href="#">@ ashion_shop</a>
+                            <a href="#">@ novo_shop</a>
                         </div>
                     </div>
                 </div>
@@ -558,6 +572,7 @@
 
     <script src="js/products.js"></script>
     <script src="js/product-details-populate.js"></script>
+    <script src="js/product-reviews.js"></script>
 </body>
 
 </html>

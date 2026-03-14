@@ -1,0 +1,8 @@
+{
+  "name": "fix-it-forward-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/generate-api-config.js"
+  }
+}

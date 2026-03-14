@@ -1,4 +1,16 @@
 /* global app entry for smooth scroll, page transitions, custom cursor */
+// Load optional API base config generated at build (`js/api-config.js`).
+(function loadApiConfig(){
+  if (typeof window.__API_BASE !== 'undefined') return;
+  try{
+    var s = document.createElement('script');
+    s.src = '/js/api-config.js';
+    s.async = true;
+    s.onload = function(){ console.info('api-config loaded'); };
+    s.onerror = function(){ /* no config present */ };
+    document.head.appendChild(s);
+  }catch(e){}
+})();
 const isReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion)').matches;
 if (isReducedMotion) document.documentElement.classList.add('reduce-motion');
 

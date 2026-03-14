@@ -467,7 +467,7 @@
                 if (!p) {
                     p = {
                         name: "Product " + id,
-                        brand: "Fashion",
+                        brand: "FNOVO",
                         price: 59.0,
                         description: "A stylish addition to your wardrobe. Perfect for all seasons.",
                         images: [
