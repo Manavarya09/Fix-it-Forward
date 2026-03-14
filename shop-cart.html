@@ -162,9 +162,11 @@
                 <div class="col-lg-6">
                     <div class="discount__content">
                         <h6>Discount codes</h6>
-                        <form action="#" class="discount-form">
-                            <input type="text" placeholder="Enter your coupon code">
-                            <button type="submit" class="site-btn">Apply</button>
+                        <form action="#" class="discount-form" id="discount-form">
+                            <input id="coupon-code" type="text" placeholder="Enter your coupon code" aria-label="Coupon code">
+                            <button type="submit" class="site-btn" id="apply-coupon">Apply</button>
+                            <button type="button" class="site-btn" id="clear-coupon" style="display:none;margin-left:8px;background:#ccc">Clear</button>
+                            <div id="coupon-msg" style="margin-top:8px;display:none"></div>
                         </form>
                     </div>
                 </div>
@@ -335,6 +337,7 @@
     <script src="js/jquery.nicescroll.min.js"></script>
     <script src="js/products.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/promotions.js"></script>
 
     <!-- Modern animation + transition libraries -->
     <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>

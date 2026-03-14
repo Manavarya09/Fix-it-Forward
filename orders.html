@@ -137,44 +137,32 @@
                     </div>
                 </div>
                 <div class="col-lg-8">
-                    <div class="shop__cart__table">
-                        <table>
+                    <main class="shop__cart__table" id="orders-main">
+                        <table aria-label="My orders" class="table">
+                            <caption class="sr-only">List of your orders</caption>
                             <thead>
                                 <tr>
-                                    <th>Order ID</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Total</th>
-                                    <th></th>
+                                    <th scope="col">Order ID</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="cart__product__item">
-                                        <h6>#12345</h6>
-                                    </td>
-                                    <td class="cart__price">2023-10-25</td>
-                                    <td class="cart__total">Delivered</td>
-                                    <td class="cart__price">AED 158.0</td>
-                                    <td class="cart__close"><a href="#" class="site-btn">Details</a></td>
-                                </tr>
-                                <tr>
-                                    <td class="cart__product__item">
-                                        <h6>#12344</h6>
-                                    </td>
-                                    <td class="cart__price">2023-10-15</td>
-                                    <td class="cart__total">Processing</td>
-                                    <td class="cart__price">AED 59.0</td>
-                                    <td class="cart__close"><a href="#" class="site-btn">Details</a></td>
+                                    <td colspan="5" id="orders-loading">Loading orders…</td>
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </main>
                 </div>
             </div>
         </div>
     </section>
     <!-- Orders Section End -->
+
+    <div id="toast" aria-live="polite" aria-atomic="true" style="position:fixed;right:16px;bottom:16px;display:none;padding:12px 16px;background:#222;color:#fff;border-radius:6px;z-index:9999"></div>
 
     <!-- Footer Section Begin -->
     <footer class="footer">

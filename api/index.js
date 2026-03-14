@@ -34,6 +34,24 @@ function authMiddleware(req, res, next) {
   }
 }
 
+function sendError(res, status, code, message, extra) {
+  const payload = { error: code, message: message };
+  if (extra) payload.extra = extra;
+  return res.status(status).json(payload);
+}
+
+function isValidEmail(e){ return typeof e==='string' && /\S+@\S+\.\S+/.test(e); }
+
+function ensureArrayItemsAreValid(items){
+  if (!Array.isArray(items)) return false;
+  for (const it of items) {
+    if (!it || (!it.product_id && !it.id)) return false;
+    const q = Number(it.quantity || 0);
+    if (!Number.isFinite(q) || q <= 0) return false;
+  }
+  return true;
+}
+
 function optionalAuthMiddleware(req, res, next) {
   const token = req.cookies && req.cookies['fif_token'];
   if (!token) return next();
@@ -72,7 +90,8 @@ app.get('/api/products/:id', (req, res) => {
 /* Auth */
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'missing' });
+  if (!email || !password) return sendError(res,400,'missing','Email and password are required');
+  if (!isValidEmail(email)) return sendError(res,400,'invalid_email','Email format is invalid');
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
   if (existing) return res.status(400).json({ error: 'exists' });
   const hash = await bcrypt.hash(password, 10);
@@ -85,7 +104,7 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'missing' });
+  if (!email || !password) return sendError(res,400,'missing','Email and password are required');
   const row = db.prepare('SELECT id,name,email,password_hash FROM users WHERE email = ?').get(email.toLowerCase());
   if (!row) return res.status(400).json({ error: 'invalid' });
   const ok = await bcrypt.compare(password, row.password_hash);
@@ -115,6 +134,7 @@ app.get('/api/cart', authMiddleware, (req, res) => {
 
 app.post('/api/cart', authMiddleware, (req, res) => {
   const items = req.body.items || [];
+  if (!ensureArrayItemsAreValid(items)) return sendError(res,400,'invalid_items','`items` must be an array of {product_id,quantity}');
   const str = JSON.stringify(items);
   db.prepare('INSERT OR REPLACE INTO carts (user_id,items) VALUES (?,?)').run(req.user.id, str);
   res.json({ ok: true });
@@ -123,13 +143,14 @@ app.post('/api/cart', authMiddleware, (req, res) => {
 /* Orders */
 app.post('/api/orders', optionalAuthMiddleware, (req, res) => {
   const items = req.body.items || [];
-  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'no_items' });
+  if (!Array.isArray(items) || items.length === 0) return sendError(res,400,'no_items','Order must include at least one item');
 
   // If guest (no req.user), require contact info
   const userId = req.user ? req.user.id : null;
   if (!userId) {
     const contact = req.body.contact || {};
-    if (!contact.name || !contact.email) return res.status(400).json({ error: 'guest_contact_required' });
+    if (!contact.name || !contact.email) return sendError(res,400,'guest_contact_required','Guest orders require contact name and email');
+    if (!isValidEmail(contact.email)) return sendError(res,400,'invalid_email','Contact email is invalid');
   }
 
   // Compute server-side total and validate products + inventory, then insert order atomically
@@ -140,9 +161,9 @@ app.post('/api/orders', optionalAuthMiddleware, (req, res) => {
     // calculate server total and verify products exist
     let serverTotal = 0;
     for (const it of items) {
-      if (!it.product_id || !it.quantity) return res.status(400).json({ error: 'invalid_item' });
+      if (!it.product_id || !it.quantity) return sendError(res,400,'invalid_item','Each item requires product_id and quantity');
       const prod = db.prepare('SELECT price FROM products WHERE id = ?').get(it.product_id);
-      if (!prod) return res.status(400).json({ error: 'product_not_found', product_id: it.product_id });
+      if (!prod) return sendError(res,400,'product_not_found','Product not found', { product_id: it.product_id });
       serverTotal += (parseFloat(prod.price) || 0) * Number(it.quantity || 0);
     }
 
@@ -170,10 +191,10 @@ app.post('/api/orders', optionalAuthMiddleware, (req, res) => {
   } catch (err) {
     if (err && typeof err.message === 'string' && err.message.indexOf('out_of_stock:') === 0) {
       const pid = err.message.split(':')[1];
-      return res.status(400).json({ error: 'out_of_stock', product_id: pid });
+      return sendError(res,400,'out_of_stock','Out of stock',{ product_id: pid });
     }
     console.error('order error', err && err.stack ? err.stack : err);
-    return res.status(500).json({ error: 'order_failed' });
+    return sendError(res,500,'order_failed','Unable to place order');
   }
 });
 
@@ -193,8 +214,10 @@ app.get('/api/inventory', (req, res) => {
 
 app.post('/api/inventory', (req, res) => {
   const { product_id, quantity } = req.body || {};
-  if (!product_id) return res.status(400).json({ error: 'missing' });
-  db.prepare('INSERT OR REPLACE INTO inventory (product_id,quantity) VALUES (?,?)').run(product_id, parseInt(quantity||0));
+  if (!product_id) return sendError(res,400,'missing','product_id is required');
+  const q = parseInt(quantity||0,10);
+  if (!Number.isFinite(q)) return sendError(res,400,'invalid_quantity','quantity must be an integer');
+  db.prepare('INSERT OR REPLACE INTO inventory (product_id,quantity) VALUES (?,?)').run(product_id, q);
   res.json({ ok: true });
 });
 
@@ -202,6 +225,34 @@ app.post('/api/inventory', (req, res) => {
 app.get('/api/promotions', (req, res) => {
   const rows = db.prepare('SELECT * FROM promotions').all();
   res.json(rows);
+});
+
+// Validate a promotion code against an items list (server-side calculation)
+app.post('/api/promotions/validate', (req, res) => {
+  const code = (req.body && req.body.code || '').toString().trim();
+  if (!code) return sendError(res,400,'missing','Promotion code is required');
+  const promo = db.prepare('SELECT * FROM promotions WHERE upper(code) = ? OR code = ?').get(code.toUpperCase(), code);
+  if (!promo) return sendError(res,404,'not_found','Promotion not found');
+
+  // compute subtotal if items provided
+  const items = Array.isArray(req.body.items) ? req.body.items : [];
+  let subtotal = 0;
+  if (items.length > 0){
+    for (const it of items){
+      if (!it || (!it.product_id && !it.id)) return sendError(res,400,'invalid_item','Each item must include product_id');
+      const pid = it.product_id || it.id;
+      const prod = db.prepare('SELECT price FROM products WHERE id = ?').get(pid);
+      if (!prod) return sendError(res,400,'product_not_found','Product not found',{ product_id: pid });
+      subtotal += (parseFloat(prod.price) || 0) * Number(it.quantity || 1);
+    }
+  }
+
+  let discount = 0;
+  if (promo.type === 'percent') discount = subtotal * (Number(promo.value || 0) / 100);
+  else if (promo.type === 'fixed') discount = Number(promo.value || 0);
+
+  const total = Math.max(0, subtotal - discount);
+  res.json({ code: promo.code, type: promo.type, value: promo.value, subtotal, discount, total, estimated: items.length === 0 });
 });
 
 /* Events (analytics) */

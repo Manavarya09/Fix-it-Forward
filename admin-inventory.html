@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — Inventory</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container py-4">
+    <h2>Inventory — Admin</h2>
+    <p id="user-status">Checking authentication…</p>
+
+    <div id="admin-area" style="display:none">
+      <div class="mb-3">
+        <button id="refresh-inv" class="site-btn">Refresh</button>
+      </div>
+      <table class="table table-striped" id="inventory-table" aria-live="polite">
+        <thead>
+          <tr><th>Product ID</th><th>Product Name</th><th>Quantity</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="not-auth" style="display:none">
+      <p>You are not signed in. <a href="login.html">Sign in</a> with an admin account to manage inventory.</p>
+    </div>
+  </div>
+
+  <div id="toast" aria-live="polite" aria-atomic="true" style="position:fixed;right:16px;bottom:16px;display:none;padding:12px 16px;background:#222;color:#fff;border-radius:6px;z-index:9999"></div>
+
+  <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/admin-inventory.js"></script>
+</body>
+</html>
