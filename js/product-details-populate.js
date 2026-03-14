@@ -68,9 +68,46 @@
     // Add to cart button
     const cartBtn = document.querySelector('.cart-btn');
     if (cartBtn) {
+      function updateInventoryUI() {
+        // show inventory count
+        const infoWrap = document.querySelector('.product__details__text');
+        if (infoWrap) {
+          let invEl = infoWrap.querySelector('.product-inventory');
+          if (!invEl) {
+            invEl = document.createElement('p');
+            invEl.className = 'product-inventory';
+            invEl.style.marginTop = '8px';
+            infoWrap.appendChild(invEl);
+          }
+          const inv = Number(product.inventory || 0);
+          if (inv > 0) {
+            invEl.textContent = 'In stock: ' + inv;
+            cartBtn.disabled = false;
+            cartBtn.classList.remove('disabled');
+            const qtyWrap = document.querySelector('.pro-qty'); if (qtyWrap) qtyWrap.style.display = '';
+          } else {
+            invEl.textContent = 'Out of stock';
+            cartBtn.disabled = true;
+            cartBtn.classList.add('disabled');
+            const qtyWrap = document.querySelector('.pro-qty'); if (qtyWrap) qtyWrap.style.display = 'none';
+          }
+        }
+      }
+
+      updateInventoryUI();
+
       cartBtn.addEventListener('click', function(e){
         e.preventDefault();
         const qty = parseInt(document.querySelector('.pro-qty input').value) || 1;
+        const inv = Number(product.inventory || 0);
+        if (inv <= 0) {
+          try { showToast('Sorry — this item is out of stock.'); } catch(e) { alert('Out of stock'); }
+          return;
+        }
+        if (qty > inv) {
+          try { showToast('Only ' + inv + ' left in stock.'); } catch(e) { alert('Not enough stock'); }
+          return;
+        }
         if (typeof addToCart === 'function') {
           addToCart({ product_id: product.id, name: product.name, price: product.price, image: (product.images||[])[0], quantity: qty });
           // fire analytics event

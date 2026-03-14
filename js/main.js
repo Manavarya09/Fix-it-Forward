@@ -311,12 +311,16 @@
         if ($('.shop-cart').length > 0 && !$('.wishlist-page').length) renderCartPage();
         // If user is logged in via API, persist cart server-side
         if (apiUser) {
-            fetch('/api/cart', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: cart })
-            }).catch(()=>{});
+                fetch('/api/cart', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: cart })
+                }).then(r=>{
+                    if (!r.ok) {
+                        try { showToast('Could not sync cart to server'); } catch(e){}
+                    }
+                }).catch(()=>{ try { showToast('Could not sync cart to server'); } catch(e){} });
         }
     }
     function saveWishlist() {
@@ -557,7 +561,22 @@
         var price = parseFloat($item.find('.product__price').clone().children().remove().end().text().replace(/[^0-9\.]/g, '').trim()) || 0;
         var img = $item.find('.product__item__pic').css('background-image').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '').replace(window.location.origin + '/', '');
         var pid = $item.data('product-id') || $item.attr('data-product-id');
-        addToCart({ product_id: pid, name: name, price: price, image: img, quantity: 1 });
+        if (!pid) { addToCart({ name: name, price: price, image: img, quantity: 1 }); return; }
+        // fetch product to check inventory before adding
+        fetch('/api/products/' + encodeURIComponent(pid)).then(r=>{
+            if (!r.ok) throw new Error('not found');
+            return r.json();
+        }).then(function(prod){
+            var inv = Number(prod.inventory || 0);
+            if (inv <= 0) {
+                try { showToast('Sorry — this item is out of stock.'); } catch(e){ alert('Out of stock'); }
+                return;
+            }
+            addToCart({ product_id: pid, name: name, price: price, image: img, quantity: 1 });
+        }).catch(function(){
+            // fallback: add to cart optimistically
+            addToCart({ product_id: pid, name: name, price: price, image: img, quantity: 1 });
+        });
     });
 
     $(document).on('click', '.product__hover li a:has(.icon_heart_alt)', function(e) {
@@ -603,11 +622,15 @@
         e.preventDefault();
         var qty = parseInt($('.product__details__button .pro-qty input').val(), 10) || 1;
         if (!window.currentProduct) return;
+        var inv = Number(window.currentProduct.inventory || 0);
+        if (inv <= 0) { try { showToast('Sorry — this item is out of stock.'); } catch(e){ alert('Out of stock'); } return; }
+        if (qty > inv) { try { showToast('Only ' + inv + ' left in stock.'); } catch(e){ alert('Not enough stock'); } return; }
         addToCart({
             name: window.currentProduct.name,
             price: window.currentProduct.price,
             image: (window.currentProduct.images && window.currentProduct.images[0]) || '',
-            quantity: qty
+            quantity: qty,
+            product_id: window.currentProduct.id
         });
         alert(window.currentProduct.name + ' added to cart!');
     });

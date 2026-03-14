@@ -2,10 +2,48 @@ const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 
-const DB_PATH = path.resolve(__dirname, 'fif.db');
+const DB_PATH = path.resolve(process.env.DB_PATH || __dirname, process.env.DB_FILE || 'fif.db');
 const db = new Database(DB_PATH);
 
+function applyMigrations() {
+  const migrationsDir = path.resolve(__dirname, 'migrations');
+  if (!fs.existsSync(migrationsDir)) return;
+  const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+  if (files.length === 0) return;
+
+  // ensure migrations table exists
+  db.exec('CREATE TABLE IF NOT EXISTS migrations (id TEXT PRIMARY KEY, filename TEXT, applied_at INTEGER);');
+
+  const applied = new Set(db.prepare('SELECT filename FROM migrations').all().map(r => r.filename));
+
+  for (const file of files) {
+    if (applied.has(file)) continue;
+    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+    console.log('Applying migration', file);
+    db.exec(sql);
+    db.prepare('INSERT INTO migrations (id,filename,applied_at) VALUES (?,?,?)').run(require('crypto').randomUUID(), file, Date.now());
+  }
+}
+
 function init() {
+  // Apply migrations if present
+  const migrationsDir = path.resolve(__dirname, 'migrations');
+  if (fs.existsSync(migrationsDir)) {
+    const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+    if (files.length > 0) {
+      applyMigrations();
+    } else {
+      createSchema();
+    }
+  } else {
+    createSchema();
+  }
+
+  // Seed products if empty
+  seedProducts();
+}
+
+function createSchema() {
   db.exec(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS products (
@@ -59,8 +97,6 @@ function init() {
       created_at INTEGER
     );
   `);
-
-  seedProducts();
 }
 
 function seedProducts() {
@@ -109,4 +145,4 @@ function seedProducts() {
   console.log('Seeded fallback products');
 }
 
-module.exports = { db, init };
+module.exports = { db, init, applyMigrations };

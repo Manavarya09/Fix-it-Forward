@@ -1,4 +1,4 @@
-Backend (minimal) — Quick start
+Backend — Quick start
 
 1. Install dependencies
 
