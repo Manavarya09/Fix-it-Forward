@@ -37,6 +37,43 @@
     if (!email||!pass) return alert('Please enter credentials');
     const res = await apiCall('/api/auth/login', { body: { email, password: pass } });
     if (!res.ok) return alert('Login failed: ' + (res.data && res.data.error ? res.data.error : res.status));
+    // Merge local cart into server cart
+    try {
+      const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+      // fetch server cart
+      const srv = await fetch('/api/cart', { credentials: 'include' }).then(r=>r.ok? r.json() : null).catch(()=>null);
+      const serverItems = (srv && Array.isArray(srv.items)) ? srv.items : [];
+
+      // if there are local items, try to map them to product_id (if missing)
+      const toMergeLocal = [];
+      if (localCart && localCart.length > 0) {
+        // fetch product list for mapping by name if needed
+        const products = await fetch('/api/products').then(r=>r.json()).catch(()=>[]);
+        const nameToId = {};
+        (products||[]).forEach(p=>{ if (p && p.name) nameToId[(p.name||'').toLowerCase()] = p.id; });
+
+        localCart.forEach(item=>{
+          const pid = item.product_id || item.id || nameToId[(item.name||'').toLowerCase()];
+          if (!pid) return; // skip unmapped
+          toMergeLocal.push({ product_id: pid, quantity: Number(item.quantity||1) });
+        });
+      }
+
+      // build merged map
+      const map = new Map();
+      (serverItems||[]).forEach(it=>{ map.set(it.product_id, (map.get(it.product_id)||0) + Number(it.quantity||0)); });
+      toMergeLocal.forEach(it=>{ map.set(it.product_id, (map.get(it.product_id)||0) + Number(it.quantity||0)); });
+
+      const merged = Array.from(map.entries()).map(([product_id, quantity])=>({ product_id, quantity }));
+      if (merged.length) {
+        await fetch('/api/cart', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ items: merged }) }).catch(()=>{});
+      }
+      // clear local cart after merge
+      localStorage.removeItem('cart');
+    } catch (err) {
+      console.warn('cart merge failed', err);
+    }
+
     alert('Logged in');
     window.location.href = 'index.html';
   });

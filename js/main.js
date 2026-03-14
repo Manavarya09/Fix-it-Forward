@@ -314,9 +314,12 @@
     }
 
     function addToCart(product) {
-        var existing = cart.find(item => item.name === product.name);
+        var pid = product.product_id || product.id || product.productId || null;
+        var existing = null;
+        if (pid) existing = cart.find(item => item.product_id === pid);
+        if (!existing) existing = cart.find(item => item.name === product.name);
         if (existing) { existing.quantity += product.quantity || 1; } 
-        else { cart.push({ name: product.name, price: parseFloat(product.price), image: product.image, quantity: product.quantity || 1 }); }
+        else { cart.push({ product_id: pid, name: product.name, price: parseFloat(product.price), image: product.image, quantity: product.quantity || 1 }); }
         saveCart();
     }
 
@@ -539,7 +542,8 @@
         var name = $item.find('.product__item__text h6 a').text();
         var price = parseFloat($item.find('.product__price').clone().children().remove().end().text().replace(/[^0-9\.]/g, '').trim()) || 0;
         var img = $item.find('.product__item__pic').css('background-image').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '').replace(window.location.origin + '/', '');
-        addToCart({ name: name, price: price, image: img, quantity: 1 });
+        var pid = $item.data('product-id') || $item.attr('data-product-id');
+        addToCart({ product_id: pid, name: name, price: price, image: img, quantity: 1 });
     });
 
     $(document).on('click', '.product__hover li a:has(.icon_heart_alt)', function(e) {

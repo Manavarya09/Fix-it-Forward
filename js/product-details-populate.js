@@ -11,6 +11,7 @@
     if (!r.ok) throw new Error('Product not found');
     return r.json();
   }).then(product => {
+    window.currentProduct = product;
     // update title, price, description
     const titleEl = document.querySelector('.product__details__text h3');
     if (titleEl) titleEl.textContent = product.name || '';
@@ -71,7 +72,7 @@
         e.preventDefault();
         const qty = parseInt(document.querySelector('.pro-qty input').value) || 1;
         if (typeof addToCart === 'function') {
-          addToCart({ name: product.name, price: product.price, image: (product.images||[])[0], quantity: qty });
+          addToCart({ product_id: product.id, name: product.name, price: product.price, image: (product.images||[])[0], quantity: qty });
           // fire analytics event
           fetch('/api/events', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: 'add_to_cart', payload: { product: product.id, qty } }) }).catch(()=>{});
         } else {
