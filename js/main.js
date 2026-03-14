@@ -1,11 +1,6 @@
-/*  ---------------------------------------------------
-website Name: manav
-Description: manav ecommerce website
-Author: Colorib
-Author URI: https://colorlib.com/
-Version: 1.0
-Created: Colorib
----------------------------------------------------------  */
+/*
+  Main JavaScript for Fix-It Forward store.
+*/
 
 'use strict';
 
