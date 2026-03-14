@@ -10,10 +10,30 @@
     /*------------------
         Product filter
     --------------------*/
+    var mixer;
     function initMixItUp() {
         if ($('.property__gallery').length > 0) {
             var containerEl = document.querySelector('.property__gallery');
-            var mixer = mixitup(containerEl);
+            mixer = mixitup(containerEl, {
+                selectors: {
+                    target: '.mix'
+                },
+                animation: {
+                    duration: 300
+                }
+            });
+
+            // Handle URL category parameter for automatic filtering
+            var params = new URLSearchParams(window.location.search);
+            var category = params.get('category');
+            if (category) {
+                var filterValue = '.' + category.toLowerCase();
+                mixer.filter(filterValue);
+                
+                // Update filter controls UI
+                $('.filter__controls li').removeClass('active');
+                $('.filter__controls li[data-filter="' + filterValue + '"]').addClass('active');
+            }
         }
     }
 

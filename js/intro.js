@@ -29,6 +29,12 @@ if (title) {
     // fallback: simple fade
     gsap.fromTo(title, {y: 20, opacity: 0}, {y:0, opacity:1, duration:1});
   }
+
+  // Hide title+tagline after 5 seconds
+  setTimeout(() => {
+    const tagline = document.querySelector('.intro-tagline');
+    gsap.to([title, tagline].filter(Boolean), {opacity: 0, y: -20, duration: 0.7, ease: 'power2.out'});
+  }, 5000);
 }
 
 // Logo draw placeholder (if an inline SVG with id #logo exists)
