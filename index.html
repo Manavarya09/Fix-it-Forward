@@ -501,7 +501,10 @@
 <!-- Scroll Animation Begin -->
 <section class="scroll-sequence-section" id="scroll-sequence">
     <div class="scroll-container">
-        <canvas id="scrollCanvas" width="1920" height="1080"></canvas>
+                <canvas id="scrollCanvas" width="1920" height="1080"></canvas>
+                <video id="scrollVideo" class="scroll-video" autoplay muted loop playsinline style="display:none;width:100%;height:100%;object-fit:cover">
+                    <source src="video/scroll.mp4" type="video/mp4">
+                </video>
         <div class="scroll-overlay">
             <div class="scroll-overlay__title">Novo Thread</div>
             <div class="scroll-overlay__tag">Coming soon in Play Store & App Store</div>
@@ -988,6 +991,18 @@
         };
 
         image.onload = render;
+        image.onerror = function(){
+            // frames not found or failed to load — fall back to playing the scroll video
+            try {
+                const vid = document.getElementById('scrollVideo');
+                if (vid) {
+                    canvas.style.display = 'none';
+                    vid.style.display = 'block';
+                    // stop listening to scroll for frame updates
+                    window.removeEventListener('scroll', onScroll);
+                }
+            } catch(e) {}
+        };
         resizeCanvas();
         updateFrame(1);
 
