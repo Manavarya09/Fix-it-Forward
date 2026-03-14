@@ -58,7 +58,6 @@ function initGlobal() {
   appInitialized = true;
   initLenis();
   initScrollTrigger();
-  if (!isReducedMotion) initCustomCursor();
   initBarba();
 }
 
@@ -72,6 +71,11 @@ function initPage() {
   // Initialize optional enhancements when libraries are available
   initVanillaTilt();
   initSwipers();
+
+  // Initialize UI for product pages, cart, and other dynamic components
+  if (typeof window.initAppUI === 'function') {
+    window.initAppUI();
+  }
 }
 
 function initVanillaTilt() {

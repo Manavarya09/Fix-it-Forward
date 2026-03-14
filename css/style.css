@@ -1137,6 +1137,29 @@ ol {
 	height: 360px;
 	position: relative;
 	overflow: hidden;
+	background-size: cover;
+	background-position: center;
+	transition: transform 0.4s ease, opacity 0.4s ease;
+	transform-origin: center center;
+}
+
+.product__item__pic::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background-image: var(--hover-bg);
+	background-size: cover;
+	background-position: center;
+	opacity: 0;
+	transition: opacity 0.35s ease;
+}
+
+.product__item:hover .product__item__pic {
+	transform: scale(1.05);
+}
+
+.product__item:hover .product__item__pic::after {
+	opacity: 1;
 }
 
 .product__item__pic .label {

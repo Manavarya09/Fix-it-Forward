@@ -36,6 +36,7 @@
     </div>
 
     <div data-barba="wrapper">
+      <div data-barba="container" data-barba-namespace="shop">
 
     <!-- Offcanvas Menu Begin -->
     <div class="offcanvas-menu-overlay"></div>
@@ -79,7 +80,7 @@
                             <li class="active"><a href="./shop.html">Shop</a></li>
                             <li><a href="#">Pages</a>
                                 <ul class="dropdown">
-                                    <li><a href="./product-details.html">Product Details</a></li>
+                                    <li><a href="./product-details.html?id=shop-1">Product Details</a></li>
                                     <li><a href="./shop-cart.html">Shop Cart</a></li>
                                     <li><a href="./checkout.html">Checkout</a></li>
                                     <li><a href="./blog-details.html">Blog Details</a></li>
@@ -346,8 +347,8 @@
                 <div class="col-lg-9 col-md-9">
                     <div class="row">
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-1.jpg">
+                            <div class="product__item" data-product-id="shop-1">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-1.jpg" data-hoverbg="img/product/product-1.jpg">
                                     <div class="label new">New</div>
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-1.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
@@ -356,7 +357,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Furry hooded parka</a></h6>
+                                    <h6><a href="product-details.html?id=shop-1">Furry hooded parka</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -369,8 +370,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-2.jpg">
+                            <div class="product__item" data-product-id="shop-2">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-2.jpg" data-hoverbg="img/product/product-2.jpg">
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-2.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
                                         <li><a href="#"><span class="icon_heart_alt"></span></a></li>
@@ -378,7 +379,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Flowy striped skirt</a></h6>
+                                    <h6><a href="product-details.html?id=shop-2">Flowy striped skirt</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -391,8 +392,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-3.jpg">
+                            <div class="product__item" data-product-id="shop-3">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-3.jpg" data-hoverbg="img/product/product-3.jpg">
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-3.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
                                         <li><a href="#"><span class="icon_heart_alt"></span></a></li>
@@ -400,7 +401,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Croc-effect bag</a></h6>
+                                    <h6><a href="product-details.html?id=shop-3">Croc-effect bag</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -413,8 +414,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-4.jpg">
+                            <div class="product__item" data-product-id="shop-4">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-4.jpg" data-hoverbg="img/product/product-4.jpg">
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-4.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
                                         <li><a href="#"><span class="icon_heart_alt"></span></a></li>
@@ -422,7 +423,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Dark wash Xavi jeans</a></h6>
+                                    <h6><a href="product-details.html?id=shop-4">Dark wash Xavi jeans</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -435,8 +436,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item sale">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-5.jpg">
+                            <div class="product__item sale" data-product-id="shop-5">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-5.jpg" data-hoverbg="img/product/product-5.jpg">
                                     <div class="label">Sale</div>
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-5.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
@@ -445,7 +446,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Ankle-cuff sandals</a></h6>
+                                    <h6><a href="product-details.html?id=shop-5">Ankle-cuff sandals</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -458,8 +459,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-6.jpg">
+                            <div class="product__item" data-product-id="shop-6">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-6.jpg" data-hoverbg="img/product/product-6.jpg">
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-6.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
                                         <li><a href="#"><span class="icon_heart_alt"></span></a></li>
@@ -467,7 +468,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Contrasting sunglasses</a></h6>
+                                    <h6><a href="product-details.html?id=shop-6">Contrasting sunglasses</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -480,8 +481,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-7.jpg">
+                            <div class="product__item" data-product-id="shop-7">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-7.jpg" data-hoverbg="img/product/product-7.jpg">
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-7.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
                                         <li><a href="#"><span class="icon_heart_alt"></span></a></li>
@@ -489,7 +490,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Circular pendant earrings</a></h6>
+                                    <h6><a href="product-details.html?id=shop-7">Circular pendant earrings</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -502,8 +503,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-8.jpg">
+                            <div class="product__item" data-product-id="shop-8">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-8.jpg" data-hoverbg="img/product/product-8.jpg">
                                     <div class="label stockout stockblue">Out Of Stock</div>
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-8.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
@@ -512,7 +513,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Cotton T-Shirt</a></h6>
+                                    <h6><a href="product-details.html?id=shop-8">Cotton T-Shirt</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
@@ -525,8 +526,8 @@
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
-                            <div class="product__item sale">
-                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-9.jpg">
+                            <div class="product__item sale" data-product-id="shop-9">
+                                <div class="product__item__pic set-bg" data-setbg="img/shop/shop-9.jpg" data-hoverbg="img/product/product-1.jpg">
                                     <div class="label">Sale</div>
                                     <ul class="product__hover">
                                         <li><a href="img/shop/shop-9.jpg" class="image-popup"><span class="arrow_expand"></span></a></li>
@@ -535,7 +536,7 @@
                                     </ul>
                                 </div>
                                 <div class="product__item__text">
-                                    <h6><a href="#">Water resistant zips backpack</a></h6>
+                                    <h6><a href="product-details.html?id=shop-9">Water resistant zips backpack</a></h6>
                                     <div class="rating">
                                         <i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
