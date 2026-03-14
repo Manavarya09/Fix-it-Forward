@@ -1,0 +1,28 @@
+:root {
+  /* Colors */
+  --clr-bg: #0a0a0a;
+  --clr-surface: #111111;
+  --clr-primary: #e8d5b0;      /* warm gold/cream */
+  --clr-accent: #c9a96e;       /* bronze */
+  --clr-text: #f5f0e8;
+  --clr-muted: #888880;
+
+  /* Typography */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* Motion */
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 0.3s;
+  --duration-page: 1.2s;
+
+  /* Spacing scale */
+  --space-xs: 0.5rem;  --space-sm: 1rem;
+  --space-md: 2rem;    --space-lg: 4rem;
+  --space-xl: 8rem;
+}
+
+html,body{height:100%;}
+body{background:var(--clr-bg);color:var(--clr-text);font-family:var(--font-body);}

@@ -1,4 +1,4 @@
-/* filepath: /Users/manavaryasingh/Fix-it-Forward/css/style.css */
+/* filepath: /Users/ashionaryasingh/Fix-it-Forward/css/style.css */
 /* Fix-It Forward stylesheet */
 
 /*----------------------------------------*/
@@ -9,7 +9,7 @@
 html,
 body {
 	height: 100%;
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-body);
 	-webkit-font-smoothing: antialiased;
 }
 
@@ -20,9 +20,9 @@ h4,
 h5,
 h6 {
 	margin: 0;
-	color: #111111;
+	color: var(--clr-text);
 	font-weight: 400;
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 }
 
 h1 {
@@ -51,8 +51,8 @@ h6 {
 
 p {
 	font-size: 14px;
-	font-family: "Montserrat", sans-serif;
-	color: #666666;
+	font-family: var(--font-body);
+	color: var(--clr-muted);
 	font-weight: 400;
 	line-height: 24px;
 	margin: 0 0 15px 0;
@@ -492,8 +492,8 @@ ol {
 
 .banner__text h1 {
 	font-size: 80px;
-	color: #111111;
-	font-family: "Cookie", cursive;
+	color: var(--clr-text);
+	font-family: var(--font-display);
 	margin-bottom: 15px;
 }
 
@@ -675,8 +675,8 @@ ol {
 
 .discount__text__title h2 {
 	font-size: 60px;
-	color: #ca1515;
-	font-family: "Cookie", cursive;
+	color: var(--clr-accent);
+	font-family: var(--font-display);
 	line-height: 46px;
 	margin-bottom: 10px;
 }
@@ -1039,8 +1039,8 @@ ol {
 }
 
 .categories__text h1 {
-	font-family: "Cookie", cursive;
-	color: #111111;
+	font-family: var(--font-display);
+	color: var(--clr-text);
 	margin-bottom: 5px;
 }
 
