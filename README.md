@@ -1,6 +1,8 @@
 # Fix-It Forward Shop
 
 ![Store hero preview](img/hero-2026-03-15.png)
+ 
+[Video demo submission (Drive)](https://drive.google.com/drive/folders/1PVqO02JVTevoDsNX3n4t-pPc3QWh3pYM?usp=sharing) — contains walkthrough and demo recordings.
 
 This repository contains the Fix-It Forward storefront prototype, combining a static front-end with a lightweight Express+SQLite backend. The focus is on clearly structured assets, documented setup steps, and a resilient API surface so future contributors can pick up the work and extend it confidently.
 
