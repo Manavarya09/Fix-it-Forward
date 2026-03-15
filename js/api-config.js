@@ -88,6 +88,51 @@
     return Object.assign({}, p, { inventory: Math.max(0, inventory) });
   }
 
+  function allProducts(){
+    return (window.PRODUCT_DATA && Object.keys(window.PRODUCT_DATA).length)
+      ? Object.values(window.PRODUCT_DATA).map(normalizeProduct)
+      : [];
+  }
+
+  function productById(id){
+    return allProducts().find(function(p){ return String(p.id) === String(id); }) || null;
+  }
+
+  function deliveryDaysFromId(orderId){
+    return 2;
+  }
+
+  function withOrderMeta(order){
+    const createdAt = order && order.created_at ? order.created_at : new Date().toISOString();
+    const created = new Date(createdAt);
+    const expected = order && order.expected_delivery
+      ? new Date(order.expected_delivery)
+      : new Date(created.getTime() + (deliveryDaysFromId(order && order.id) * 86400000));
+    const status = (order && order.status) || 'Confirmed';
+    const tracking = (order && order.tracking_id) || ('MOCK' + String(order && order.id || Date.now()).replace(/[^0-9]/g, '').slice(-10));
+    return Object.assign({}, order, {
+      created_at: created.toISOString(),
+      expected_delivery: expected.toISOString(),
+      status,
+      tracking_id: tracking
+    });
+  }
+
+  function normalizeOrderItems(items){
+    return (Array.isArray(items) ? items : []).map(function(it){
+      const pid = it && (it.product_id || it.id);
+      const prod = pid ? productById(pid) : null;
+      const qty = Number(it && it.quantity || 1);
+      return {
+        product_id: pid || null,
+        name: (it && it.name) || (prod && prod.name) || 'Item',
+        price: Number((it && it.price) || (prod && prod.price) || 0),
+        image: (it && it.image) || (prod && prod.images && prod.images[0]) || 'img/product/product-1.jpg',
+        quantity: qty > 0 ? qty : 1
+      };
+    });
+  }
+
   const origFetch = window.fetch.bind(window);
 
   window.fetch = async function(input, init){
@@ -173,28 +218,36 @@
 
       // ORDERS
       if (url === '/api/orders' && method.toUpperCase() === 'GET'){
-        return jsonResponse((orders[currentKey] || []), 200);
+        return jsonResponse((orders[currentKey] || []).map(withOrderMeta), 200);
       }
       if (url === '/api/orders' && method.toUpperCase() === 'POST'){
         const id = 'o' + Date.now();
-        const order = Object.assign({ id, created_at: new Date().toISOString() }, body || {});
+        const createdAt = new Date().toISOString();
+        const items = normalizeOrderItems(body && body.items);
+        const computedTotal = items.reduce(function(sum, it){ return sum + (Number(it.price || 0) * Number(it.quantity || 1)); }, 0);
+        const paymentMethod = body && body.payment && body.payment.method ? body.payment.method : 'cheque';
+        const order = withOrderMeta(Object.assign({
+          id,
+          created_at: createdAt,
+          items,
+          total: Number(body && body.total) || computedTotal,
+          status: paymentMethod === 'cheque' ? 'Pending Payment' : 'Confirmed'
+        }, body || {}));
         orders[currentKey] = orders[currentKey] || [];
         orders[currentKey].push(order);
         saveOrders(orders);
-        return jsonResponse({ id: order.id }, 200);
+        return jsonResponse({ id: order.id, order: order }, 200);
       }
       if (parts[0] === 'orders' && parts[1] && method.toUpperCase() === 'GET'){
         const userOrders = orders[currentKey] || [];
         const found = userOrders.find(o=>o.id === parts[1]);
         if (!found) return jsonResponse({ error: 'Not found' }, 404);
-        return jsonResponse(found, 200);
+        return jsonResponse(withOrderMeta(found), 200);
       }
 
       // PRODUCTS: read from global PRODUCT_DATA if available
       if (parts[0] === 'products'){
-        const all = (window.PRODUCT_DATA && Object.keys(window.PRODUCT_DATA).length)
-          ? Object.values(window.PRODUCT_DATA).map(normalizeProduct)
-          : [];
+        const all = allProducts();
         // GET /api/products or /api/products?q=...
         if (!parts[1] && method.toUpperCase() === 'GET'){
           try {

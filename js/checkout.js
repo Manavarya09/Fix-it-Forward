@@ -2,6 +2,7 @@
 (function(){
   if (typeof document === 'undefined') return;
   function showToast(msg){ const t = document.getElementById('toast'); if(!t) return; t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3500); }
+  let placing = false;
 
   // toggle password/note rows
   document.addEventListener('change', function(ev){
@@ -25,6 +26,7 @@
     const form = e.target.closest && e.target.closest('.checkout__form');
     if (!form) return;
     e.preventDefault();
+    if (placing) return;
     // gather cart from localStorage
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     if (!cart || cart.length === 0) return alert('Your cart is empty');
@@ -68,6 +70,12 @@
     const paymentMethod = methodEl.value;
 
     function placeOrderWithPayment(paymentInfo){
+      placing = true;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Placing Order...';
+      }
       // paymentInfo can be null for cheque or contain mock payment data
       fetch('/api/me', { credentials: 'include' }).then(r=>r.json()).then(d=>{
         const body = { items: cart, total };
@@ -79,13 +87,17 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         }).then(r=>r.json()).then(res=>{
-          if (!res || !res.id) return showToast('Order failed 😿');
+          if (!res || !res.id) {
+            placing = false;
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place order'; }
+            return showToast('Order failed 😿');
+          }
           localStorage.removeItem('cart');
           try { showToast('Order placed — ref: ' + res.id + ' 🎉'); } catch(e){}
-          window.location.href = 'orders.html?order=' + res.id;
-        }).catch(err=>{ console.warn(err); showToast('Order failed 😿'); });
+          window.location.href = 'order-confirmation.html?order=' + encodeURIComponent(res.id);
+        }).catch(err=>{ console.warn(err); placing = false; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place order'; } showToast('Order failed 😿'); });
       }).catch(()=>{ showToast('Could not verify login — placing as guest');
-        fetch('/api/orders', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: cart, total, contact, payment: paymentInfo }) }).then(r=>r.json()).then(res=>{ if (res && res.id) { localStorage.removeItem('cart'); showToast('Order placed — ref: ' + res.id + ' 🎉'); window.location.href='orders.html?order='+res.id } else showToast('Order failed 😿'); }).catch(()=>showToast('Order failed 😿'));
+        fetch('/api/orders', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: cart, total, contact, payment: paymentInfo }) }).then(r=>r.json()).then(res=>{ if (res && res.id) { localStorage.removeItem('cart'); showToast('Order placed — ref: ' + res.id + ' 🎉'); window.location.href='order-confirmation.html?order='+encodeURIComponent(res.id); } else { placing = false; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place order'; } showToast('Order failed 😿'); } }).catch(()=>{ placing = false; if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Place order'; } showToast('Order failed 😿'); });
       });
     }
 

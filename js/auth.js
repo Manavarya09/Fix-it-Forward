@@ -1,6 +1,38 @@
 (function(){
   if (typeof $ === 'undefined') return;
 
+  const STORAGE_KEYS = {
+    USERS: 'fif_users',
+    SESSION: 'fif_session'
+  };
+
+  function load(key, def){ try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(def)); } catch(e){ return def; } }
+  function save(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+
+  function fallbackRegister(name, email, pass){
+    const users = load(STORAGE_KEYS.USERS, {});
+    for (const k in users) {
+      if ((users[k].email || '').toLowerCase() === email) return { ok: false, error: 'Email already registered' };
+    }
+    const id = 'u' + Date.now();
+    users[id] = { id, name, email, password: pass };
+    save(STORAGE_KEYS.USERS, users);
+    save(STORAGE_KEYS.SESSION, { userId: id });
+    return { ok: true };
+  }
+
+  function fallbackLogin(email, pass){
+    const users = load(STORAGE_KEYS.USERS, {});
+    for (const k in users) {
+      const u = users[k];
+      if ((u.email || '').toLowerCase() === email && u.password === pass) {
+        save(STORAGE_KEYS.SESSION, { userId: u.id });
+        return { ok: true };
+      }
+    }
+    return { ok: false, error: 'Invalid credentials' };
+  }
+
   async function apiCall(path, opts){
     opts = opts || {};
     const headers = opts.headers || {};
@@ -23,11 +55,15 @@
     const pass2 = $f.find('input').eq(3).val();
     if (!name||!email||!pass) { try { showToast('Please fill all fields'); } catch(e){ alert('Please fill all fields'); } return; }
     if (pass !== pass2) { try { showToast('Passwords do not match'); } catch(e){ alert('Passwords do not match'); } return; }
-    const res = await apiCall('/api/auth/register', { body: { name, email, password: pass } });
+    let res = await apiCall('/api/auth/register', { body: { name, email, password: pass } });
     if (!res.ok) {
-      const msg = (res.data && res.data.error) ? res.data.error : ('Status ' + res.status);
-      try { showToast('Registration failed: ' + msg); } catch(e){ alert('Registration failed: ' + msg); }
-      return;
+      // Fallback for static/demo environments where fetch shim may be unavailable.
+      const fb = fallbackRegister(name, email, pass);
+      if (!fb.ok) {
+        const msg = fb.error || ((res.data && res.data.error) ? res.data.error : ('Status ' + res.status));
+        try { showToast('Registration failed: ' + msg); } catch(e){ alert('Registration failed: ' + msg); }
+        return;
+      }
     }
     try { showToast('Registration successful'); } catch(e){};
     window.location.href = 'index.html';
@@ -39,11 +75,14 @@
     const email = $f.find('input').eq(0).val().trim().toLowerCase();
     const pass = $f.find('input').eq(1).val();
     if (!email||!pass) { try { showToast('Please enter credentials'); } catch(e){ alert('Please enter credentials'); } return; }
-    const res = await apiCall('/api/auth/login', { body: { email, password: pass } });
+    let res = await apiCall('/api/auth/login', { body: { email, password: pass } });
     if (!res.ok) {
-      const msg = (res.data && res.data.error) ? res.data.error : ('Status ' + res.status);
-      try { showToast('Login failed: ' + msg); } catch(e){ alert('Login failed: ' + msg); }
-      return;
+      const fb = fallbackLogin(email, pass);
+      if (!fb.ok) {
+        const msg = fb.error || ((res.data && res.data.error) ? res.data.error : ('Status ' + res.status));
+        try { showToast('Login failed: ' + msg); } catch(e){ alert('Login failed: ' + msg); }
+        return;
+      }
     }
     // Merge local cart into server cart
     try {
