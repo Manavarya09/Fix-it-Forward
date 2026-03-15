@@ -2,7 +2,76 @@
 (function(){
   if (typeof document === 'undefined') return;
   function showToast(msg){ const t = document.getElementById('toast'); if(!t) return; t.textContent = msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3500); }
+  function formatAED(n){ return 'AED ' + Number(n || 0).toFixed(2); }
+  function getAppliedPromo(){ try { return JSON.parse(localStorage.getItem('promo') || 'null'); } catch(e){ return null; } }
+  function getDiscount(subtotal){
+    const promo = getAppliedPromo();
+    if (!promo || !promo.code) return 0;
+    const code = String(promo.code).toUpperCase();
+    if (code === 'SAVE10') return subtotal * 0.10;
+    if (code === 'SAVE25') return 25;
+    if (code === 'FREESHIP') return 10;
+    return 0;
+  }
+  function readLocalCart(){
+    try { return JSON.parse(localStorage.getItem('cart') || '[]'); }
+    catch(e){ return []; }
+  }
+  function renderCheckoutOrder(cart){
+    const list = document.querySelector('.checkout__order__product ul');
+    if (!list) return;
+    const lines = ['<li><span class="top__text">Product</span><span class="top__text__right">Total</span></li>'];
+    if (!Array.isArray(cart) || cart.length === 0){
+      lines.push('<li>Your cart is empty <span>AED 0.00</span></li>');
+    } else {
+      cart.forEach((item, idx) => {
+        const qty = Math.max(1, Number(item.quantity || 1));
+        const price = parseFloat(item.price || 0) || 0;
+        const lineTotal = price * qty;
+        const name = item.name || item.product_id || 'Item';
+        lines.push(`<li>${String(idx + 1).padStart(2, '0')}. ${name} x ${qty} <span>${formatAED(lineTotal)}</span></li>`);
+      });
+    }
+    list.innerHTML = lines.join('');
+
+    const subtotal = (Array.isArray(cart) ? cart : []).reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (Number(item.quantity) || 1)), 0);
+    const discount = Math.min(subtotal, getDiscount(subtotal));
+    const total = Math.max(0, subtotal - discount);
+    const subEl = document.getElementById('checkout-subtotal');
+    const discEl = document.getElementById('checkout-discount');
+    const totEl = document.getElementById('checkout-total');
+    if (subEl) subEl.textContent = formatAED(subtotal);
+    if (discEl) discEl.textContent = formatAED(discount);
+    if (totEl) totEl.textContent = formatAED(total);
+
+    const submitBtn = document.querySelector('.checkout__order button[type="submit"]');
+    if (submitBtn){
+      submitBtn.disabled = cart.length === 0;
+      submitBtn.style.opacity = cart.length === 0 ? '0.6' : '';
+      submitBtn.style.cursor = cart.length === 0 ? 'not-allowed' : '';
+    }
+  }
+  async function loadCartForCheckout(){
+    let cart = readLocalCart();
+    try {
+      const me = await fetch('/api/me', { credentials: 'include' });
+      const meData = await me.json();
+      if (meData && meData.user){
+        const serverRes = await fetch('/api/cart', { credentials: 'include' });
+        if (serverRes.ok){
+          const serverCart = await serverRes.json();
+          if (serverCart && Array.isArray(serverCart.items)){
+            cart = serverCart.items;
+            localStorage.setItem('cart', JSON.stringify(cart));
+          }
+        }
+      }
+    } catch(e) {}
+    renderCheckoutOrder(Array.isArray(cart) ? cart : []);
+  }
   let placing = false;
+
+  loadCartForCheckout();
 
   // toggle password/note rows
   document.addEventListener('change', function(ev){
@@ -28,7 +97,7 @@
     e.preventDefault();
     if (placing) return;
     // gather cart from localStorage
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const cart = readLocalCart();
     if (!cart || cart.length === 0) return alert('Your cart is empty');
     // compute total
     const total = cart.reduce((s,i)=>s + (parseFloat(i.price)||0) * (i.quantity||1), 0);

@@ -121,40 +121,156 @@
 
     var items = Array.isArray(orders) ? orders.slice().sort(function(a, b){
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }).slice(0, 5) : [];
+    }) : [];
 
-    if (!items.length) {
-      panel.innerHTML = '<h5>RECENT ORDERS</h5><p>You have no orders yet.</p>';
-      accountWrap.appendChild(panel);
-      return;
+    panel.innerHTML = '<h5 style="margin-bottom:10px;">RECENT ORDERS</h5>';
+
+    // Tabs: Open / Delivered / Cancelled
+    var tabs = document.createElement('div');
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+
+    var tabNames = [
+      { key: 'open', label: 'Open' },
+      { key: 'delivered', label: 'Delivered' },
+      { key: 'cancelled', label: 'Cancelled' }
+    ];
+
+    tabNames.forEach(function(t, idx){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'account-orders-tab';
+      b.dataset.tab = t.key;
+      b.textContent = t.label;
+      b.style.padding = '8px 12px';
+      b.style.border = '1px solid #ddd';
+      b.style.background = idx === 0 ? '#222' : '#fff';
+      b.style.color = idx === 0 ? '#fff' : '#222';
+      b.style.borderRadius = '6px';
+      b.style.cursor = 'pointer';
+      tabs.appendChild(b);
+    });
+
+    panel.appendChild(tabs);
+
+    var listWrap = document.createElement('div');
+    listWrap.id = 'account-orders-list';
+    panel.appendChild(listWrap);
+
+    accountWrap.appendChild(panel);
+
+    function statusBucket(o){
+      var s = (o && o.status || '').toLowerCase();
+      if (s.indexOf('deliver') !== -1 || s === 'delivered') return 'delivered';
+      if (s.indexOf('cancel') !== -1 || s === 'cancelled') return 'cancelled';
+      return 'open';
     }
 
-    var cards = items.map(function(order){
+    function buildOrderCard(order){
       var eta = fmtDate(order.expected_delivery);
       var etaDays = daysUntil(order.expected_delivery);
       var created = fmtDate(order.created_at);
       var status = order.status || 'Confirmed';
       var tracking = order.tracking_id || 'Pending';
-      var lines = (order.items || []).slice(0, 3).map(function(it){
-        return '<li>' + (it.name || it.product_id || 'Item') + ' x ' + Number(it.quantity || 1) + '</li>';
+      var total = Number(order.total || 0).toFixed(2);
+
+      // Items thumbnails + details
+      var itemsHtml = (order.items || []).map(function(it, idx){
+        var img = it.image || 'img/product/product-1.jpg';
+        var title = it.name || it.product_id || 'Item';
+        var qty = Number(it.quantity || 1);
+        var price = Number(it.price || 0).toFixed(2);
+        return '' +
+          '<div class="order-item" data-order="' + order.id + '" data-index="' + idx + '" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f0f0f0;">' +
+            '<img src="' + img + '" alt="' + title + '" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:14px;margin-bottom:4px;">' + title + '</div>' +
+              '<div style="font-size:13px;color:#666;">AED ' + price + ' &times; ' + qty + '</div>' +
+            '</div>' +
+            '<div>' +
+              '<button class="buy-again-btn site-btn" data-order="' + order.id + '" data-idx="' + idx + '" type="button" style="padding:6px 10px;">Buy again</button>' +
+            '</div>' +
+          '</div>';
       }).join('');
+
+      // Progress bar (3 steps)
+      var step = 0; // 0: ordered, 1: shipped, 2: delivered
+      var sLower = (status || '').toLowerCase();
+      if (sLower.indexOf('ship') !== -1) step = 1;
+      if (sLower.indexOf('deliver') !== -1 || sLower === 'delivered') step = 2;
+
+      var progressHtml = '' +
+        '<div style="margin-top:8px;">' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<div style="flex:1;height:8px;background:#eee;border-radius:8px;position:relative;overflow:hidden;">' +
+              '<div class="progress-fill" style="position:absolute;left:0;top:0;height:100%;width:' + ( (step/2)*100 ) + '%;background:linear-gradient(90deg,#4caf50,#8bc34a);"></div>' +
+            '</div>' +
+            '<div style="min-width:120px;font-size:12px;color:#666;text-align:right;">' + status + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;margin-top:8px;font-size:12px;color:#666;">' +
+            '<div style="flex:1;text-align:center;">Ordered</div>' +
+            '<div style="flex:1;text-align:center;">Shipped</div>' +
+            '<div style="flex:1;text-align:center;">Delivered</div>' +
+          '</div>' +
+        '</div>';
+
       return '' +
-        '<div style="border:1px solid #ececec;border-radius:8px;padding:12px;margin-bottom:10px;background:#fff;">' +
-          '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;">' +
+        '<div style="border:1px solid #ececec;border-radius:8px;padding:12px;margin-bottom:12px;background:#fff;">' +
+          '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;">' +
             '<strong>Order #' + order.id + '</strong>' +
-            '<span style="font-size:12px;padding:4px 8px;border-radius:999px;background:#f4f4f4;">' + status + '</span>' +
+            '<span style="font-size:12px;padding:6px 10px;border-radius:999px;background:#f4f4f4;">' + tracking + '</span>' +
           '</div>' +
           '<p style="margin:8px 0 4px 0;">Placed: ' + created + '</p>' +
-          '<p style="margin:4px 0;"><strong>Arriving by:</strong> ' + eta + ' (in ' + etaDays + ' day' + (etaDays === 1 ? '' : 's') + ')</p>' +
-          '<p style="margin:4px 0;"><strong>Tracking:</strong> ' + tracking + '</p>' +
-          '<p style="margin:4px 0;"><strong>Total:</strong> AED ' + Number(order.total || 0).toFixed(2) + '</p>' +
-          '<ul style="margin:6px 0 0 18px;">' + lines + '</ul>' +
-          '<div style="margin-top:8px;"><a href="./orders.html?order=' + order.id + '" class="site-btn" style="padding:8px 14px;line-height:1.2;">Track package</a></div>' +
+          progressHtml +
+          '<p style="margin:8px 0 4px 0;"><strong>Arriving by:</strong> ' + eta + ' (in ' + etaDays + ' day' + (etaDays === 1 ? '' : 's') + ')</p>' +
+          '<p style="margin:4px 0;"><strong>Total:</strong> AED ' + total + '</p>' +
+          itemsHtml +
         '</div>';
-    }).join('');
+    }
 
-    panel.innerHTML = '<h5>RECENT ORDERS</h5>' + cards;
-    accountWrap.appendChild(panel);
+    function renderListForBucket(bucket){
+      listWrap.innerHTML = '';
+      var filtered = items.filter(function(o){ return statusBucket(o) === bucket; });
+      if (!filtered.length) {
+        listWrap.innerHTML = '<p>No orders in this category.</p>';
+        return;
+      }
+      listWrap.innerHTML = filtered.map(buildOrderCard).join('');
+
+      // Attach buy again handlers
+      Array.prototype.slice.call(listWrap.querySelectorAll('.buy-again-btn')).forEach(function(btn){
+        btn.addEventListener('click', function(ev){
+          var ord = btn.dataset.order;
+          var idx = Number(btn.dataset.idx || 0);
+          var order = items.find(function(o){ return String(o.id) === String(ord); });
+          if (!order) return showToast('Order not found');
+          var item = order.items && order.items[idx];
+          if (!item) return showToast('Item not found');
+          // Add to cart: fetch current cart, merge, post
+          fetch('/api/cart', { method: 'GET', credentials: 'include' }).then(function(r){ return r.json(); }).then(function(res){
+            var current = (res && res.items) || [];
+            // Try to find existing
+            var found = current.find(function(ci){ return (ci.product_id && item.product_id && String(ci.product_id) === String(item.product_id)) || (ci.name && ci.name === item.name); });
+            if (found) found.quantity = Number(found.quantity || 0) + Number(item.quantity || 1);
+            else current.push({ product_id: item.product_id, name: item.name, quantity: item.quantity || 1, price: item.price, image: item.image });
+            return fetch('/api/cart', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: current }) });
+          }).then(function(){ showToast('Added to cart');
+            try { if (window.updateCartCount) window.updateCartCount(); } catch(e){}
+          }).catch(function(){ showToast('Could not add to cart'); });
+        });
+      });
+    }
+
+    // initialize with 'open'
+    renderListForBucket('open');
+    Array.prototype.slice.call(panel.querySelectorAll('.account-orders-tab')).forEach(function(b){
+      b.addEventListener('click', function(){
+        panel.querySelectorAll('.account-orders-tab').forEach(function(x){ x.style.background = '#fff'; x.style.color = '#222'; });
+        b.style.background = '#222'; b.style.color = '#fff';
+        renderListForBucket(b.dataset.tab);
+      });
+    });
   }
 
   function renderOrderHighlight(orders){

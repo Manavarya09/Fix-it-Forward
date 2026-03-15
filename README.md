@@ -1,131 +1,85 @@
-# Fix-It Forward: Broken Store Challenge
+# Fix-It Forward Shop
 
-Welcome to **Fix-It Forward**.
+![Store hero preview](img/hero-2026-03-15.png)
 
-This repository contains a deliberately incomplete and fragile front-end for a small e‑commerce experience. The goal of the event is to transform this unstable prototype into a polished, reliable, and production-ready online store.
+This repository contains the Fix-It Forward storefront prototype, combining a static front-end with a lightweight Express+SQLite backend. The focus is on clearly structured assets, documented setup steps, and a resilient API surface so future contributors can pick up the work and extend it confidently.
 
----
+## Repository structure
 
-## Event Concept
+| Area | Description |
+| --- | --- |
+| `index.html`, `intro.html`, `shop.html`, etc. | Static entrypoints covering the landing page, store, product, and account views. Each file pairs with `js/` for behavior and `css/` for surface styling. |
+| `css/` | Collection of vendor and custom styles, including global layout rules, typography tokens, and component-specific `.scss` sources used to prototype the UI. |
+| `js/` | Front-end controllers for product browsing, cart management, checkout flows, and UI helpers (modals, search, pagination). `app.js` is the main orchestrator, while smaller modules keep featured behavior isolated. |
+| `fonts/`, `img/`, `frames/`, `video/` | Static assets that deliver the visual polish referenced by the templates. |
+| `api/` | Express + SQLite backend that serves the front-end as static files while exposing `/api/*` endpoints (products, auth, cart, orders, inventory, promotions, events). See [`api/README-BACKEND.md`](api/README-BACKEND.md) for the service contract. |
+| `scripts/` | Utilities that inject configuration at build time, such as generating `js/api-config.js` so clients can target a deployed API host. |
+| `styles.css`, `vercel.json` | Root-level hooks for global styles and deployment rewrites when hosting on Vercel. |
 
-**Fix-It Forward** is a focused website transformation event. You start with a visually appealing but unreliable store and push it all the way to a professional, usable, and market-ready experience.
+## Project structure
 
-You will:
+- `js/`: front-end controllers live here. `app.js` ties product rendering, cart/cart persistence, and checkout state to the UI, while helper scripts (`search-pagination.js`, `product-details-populate.js`, `orders.js`, etc.) scope individual behaviors for clarity.
+- `css/` & `sass/`: vendor styles are loaded from `css/` (Bootstrap, slicknav, icons), and our SCSS source files under `sass/` capture component-based rules that compile into `global.css`/`styles.css`. Assets rely on this cascade for responsive layouts, typography tokens, and utility classes.
+- `img/`, `fonts/`, `video/`, `frames/`: visual flavor is centralized here—banner photography, product shots, icon fonts, and promo videos referenced by the HTML templates to keep markup clean.
+- `api/`: lightweight backend with Express + SQLite. Routes under `/api/*` handle products, auth, carts, orders, inventory, promotions, and events while also serving the front-end build.
+- `scripts/`: build-time helpers such as `generate-api-config.js` produce `js/api-config.js` so the client can target different API hosts without changing source code.
+- `styles.css`, `vercel.json`: root-level style overrides and Vercel rewrites (e.g., `/api/:path*`) ensure the deployment environment can integrate with the backend smoothly.
 
-- Analyse and understand an existing front-end implementation.
-- Repair inconsistencies and flaws in behaviour, experience, and structure.
-- Extend the project with real backend capabilities and additional features.
+## Setup & run
 
-By the end, the store should feel like something you would be comfortable putting in front of real customers.
+### Front-end only (static preview)
 
----
+1. Open the repository root in your editor.  
+2. Launch `index.html` (or any other entrypoint) in a browser directly or via your editor’s “Open in Browser”.  
+3. Interactions (add to cart, search, checkout) will run entirely in the browser because the data is bootstrapped from the front-end assets.
 
-## Scenario
+### Full stack (front-end + backend)
 
-You have inherited a front-end prototype for a fictional shop called **Fix-It Forward Shop**. It looks reasonably modern and seems to work at a glance, but it was built quickly for a demo and never hardened for real use.
+1. Install backend dependencies:
+   ```bash
+   cd api
+   npm install
+   ```
+2. Start the server (serves both API and static client assets):
+   ```bash
+   cd api
+   npm start
+   # opens http://localhost:3000
+   ```
+3. The Express app uses `better-sqlite3` to read/write `api/fif.db` and seeds products from `js/products.js` if those fixtures exist. Authentication is handled with JWT cookies (`fif_token`).
+4. The server exposes `/api/*` endpoints for:
+   - product listings and detail queries
+   - cart persistence
+   - user authentication and protected orders/inventory routes
+   - promotions and event metadata used by the UI
 
-Your job during the event is to:
+### Deploying & API configuration
 
-- Turn this into a **smooth, efficient, fully functional** online store prototype.
-- Treat the current codebase as a starting point, not a finished product.
+1. The front-end build step (`npm run build`) runs `scripts/generate-api-config.js`, which outputs `js/api-config.js` setting `window.__API_BASE` to the `API_BASE` environment variable.
+2. When serving the static site, the client code loads `js/api-config.js` (if present) so every fetch call can be prefixed with `window.__API_BASE || ''` to target remote APIs.
+3. On Vercel, deploy the root as a static project, set the `API_BASE` env var, and optionally add a `/api/:path*` rewrite if the backend sits elsewhere.
 
-There is no backend yet: all data is currently in the front-end. Part of your challenge is designing and wiring up proper backend behaviour.
+## Key fixes & enhancements
 
----
+- Stabilized UX: the store supports browsing, cart updates, checkout, and status messages with consistent styling drawn from `css/` and `scss/` modules.
+- Backend wiring: Express now boots SQLite persistence, seeds products, and asserts JWT-based auth so cart/orders persist across sessions instead of being purely front-end memory.  
+- API surface: new endpoints cover products, cart, orders, inventory, promotions, and events, offering a foundation to add future features such as saved carts or order tracking.  
+- Deployment clarity: `scripts/generate-api-config.js` and the `vercel.json` notes document how to switch between local, staging, and production APIs without changing source code.
+- Maintainability: logical splits between UI scripts, static assets, and backend services make it easier to hand the project to the next engineer with clear boundaries.
 
-## Your Objectives
+## Technologies
 
-During the event, aim to achieve the following:
+- Front-end: Vanilla HTML/CSS/JavaScript plus structured asset directories; layout depends on `styles.css` plus numerous vendor CSS files for icons, carousels, and UI helpers.  
+- Back-end: Node.js + Express, JWT-auth via `jsonwebtoken`, persistent storage with `better-sqlite3`, request logging with `morgan`, security helpers such as `cookie-parser`, and `bcrypt` for password hashing.  
+- Tooling: `scripts/generate-api-config.js` bridges env vars to the browser, and `npm run build` simply ensures the config is emitted before shipping the site.
 
-1. **Aesthetically refined**
-   - Maintain or improve the visual quality of the UI.
-   - Ensure the design feels consistent, intentional, and on-brand for an online store.
+## Testing & validation
 
-2. **Fully functional**
-   - Make the store behave like a real e‑commerce experience from a user’s point of view.
-   - Support browsing products, adding them to a cart, reviewing a summary, and completing a checkout flow.
+- Manual walkthroughs cover product browsing, cart arithmetic, checkout submissions, and promotions when the backend is running.  
+- The API exposes health endpoints during development, and `migrate.js` can reset or seed the SQLite database (`npm run migrate`).
 
-3. **Technically structured**
-   - Organise the code so that it is maintainable and extensible.
-   - Prepare the project so that future engineers could comfortably build on top of it.
+## Next steps
 
-4. **Ready for real‑world application**
-   - Treat performance, accessibility, and resilience as first‑class concerns.
-   - Design your changes as if this store might eventually receive real traffic.
-
----
-
-## What You’re Given
-
-This repo currently contains:
-
-- `index.html`  
-  The main application shell and markup for the store.
-
-- `styles.css`  
-  Global styles and layout rules for the site.
-
-- `app.js`  
-  Front‑end logic for rendering products, managing a cart, and handling the basic flow.
-
-There is intentionally **no backend** in this repository yet.
-
----
-
-## What You Are Expected To Build
-
-You are encouraged to:
-
-- Stabilise and refine the existing front-end experience.
-- Introduce a backend of your choice (for example: a simple API, a small database, or a mocked service layer) to support:
-  - Product listing and retrieval.
-  - Cart or order persistence.
-  - A basic checkout or order‑submission flow.
-- Add any extra features that you think make the experience more realistic or delightful.
-
-Technology choices for the backend and any additional tooling are up to you, as long as the result is coherent and demonstrable.
-
----
-
-## How to Run the Project
-
-This project is a static front-end and can be opened directly in a browser.
-
-**Option 1: Open the file directly**
-
-1. Open the repository folder in your editor.  
-2. Open `index.html` in your browser (for example, via your editor’s “Open in Browser” command or by double‑clicking the file in your file explorer).
-
-**Option 2: Run a simple local web server**
-
-You may prefer to serve the files over HTTP (for example, if you add API endpoints later):
-
-1. From the project root, start a small static server of your choice (for example, using Python, Node, or your preferred tooling).
-2. Visit the URL that your server prints (commonly `http://localhost:8000` or similar).
-
-No build step is required for the initial version: the app is plain HTML, CSS, and JavaScript.
-
----
-
-## Suggested Extensions (Optional)
-
-Once the basic experience feels solid, consider exploring:
-
-- User accounts and saved carts.
-- Basic inventory management (stock levels, availability).
-- Simple promotions or discount logic.
-- Order confirmation views and lightweight tracking.
-- Improved analytics or event tracking.
-
-These are not mandatory, but they mirror real‑world expectations for a more complete store.
-
----
-
-## Ground Rules
-
-- You are free to refactor, reorganise, rename, and restructure the codebase as you see fit.
-- You may introduce frameworks, libraries, or build tooling if it helps you deliver a better result.
-- Focus on clarity, maintainability, and correctness.
-- Document any important decisions so that another engineer can quickly understand your approach.
-
-Have fun transforming this prototype into something truly robust and ready to ship.
+1. Add automated unit or integration tests for the API endpoints and cart logic.  
+2. Expand the admin/inventory views with stock management and promotions authoring.  
+3. Improve accessibility (keyboard flow, screen-reader announcements) and performance (image optimization, code splitting) as the asset graph grows.
