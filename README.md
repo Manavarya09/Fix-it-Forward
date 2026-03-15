@@ -78,8 +78,121 @@ This repository contains the Fix-It Forward storefront prototype, combining a st
 - Manual walkthroughs cover product browsing, cart arithmetic, checkout submissions, and promotions when the backend is running.  
 - The API exposes health endpoints during development, and `migrate.js` can reset or seed the SQLite database (`npm run migrate`).
 
-## Next steps
+## Project file tree
 
-1. Add automated unit or integration tests for the API endpoints and cart logic.  
-2. Expand the admin/inventory views with stock management and promotions authoring.  
-3. Improve accessibility (keyboard flow, screen-reader announcements) and performance (image optimization, code splitting) as the asset graph grows.
+Below is a concise hierarchical view of the repository showing the main folders and representative files.
+
+```
+. 
+├── .agent/ (internal skill files - omitted) 
+├── .vscode/
+│   └── settings.json
+├── about.html
+├── account.html
+├── admin-inventory.html
+├── blog-details.html
+├── blog.html
+├── checkout.html
+├── contact.html
+├── faq.html
+├── index.html
+├── intro.html
+├── login.html
+├── main.html
+├── order-confirmation.html
+├── orders.html
+├── package.json
+├── product-details.html
+├── README-BACKEND.md
+├── README-DEPLOY.md
+├── README.md
+├── shop-cart.html
+├── shop.html
+├── styles.css
+├── vercel.json
+├── wishlist.html
+├── video/
+│   ├── hero-fashion.mp4
+│   └── scroll.mp4
+├── api/
+│   ├── Dockerfile
+│   ├── db.js
+│   ├── index.js
+│   ├── migrate.js
+│   ├── package.json
+│   ├── README-BACKEND.md
+│   └── migrations/
+│       └── 001_init.sql
+├── css/
+│   ├── bootstrap.min.css
+│   ├── elegant-icons.css
+│   ├── font-awesome.min.css
+│   ├── global.css
+│   ├── intro.css
+│   ├── jquery-ui.min.css
+│   ├── magnific-popup.css
+│   ├── owl.carousel.min.css
+│   ├── slicknav.min.css
+│   └── tokens.css
+├── fonts/
+│   ├── ElegantIcons.ttf
+│   ├── ElegantIcons.woff
+│   ├── fontawesome-webfont.ttf
+│   └── FontAwesome.otf
+├── frames/ (many frame_*.png assets)
+├── img/
+│   ├── hero-2026-03-15.png
+│   ├── logo.png
+│   ├── discount.jpg
+│   ├── banner/
+│   │   ├── banner-1.jpg
+│   │   ├── banner-2.jpg
+│   │   └── banner-3.jpg
+│   ├── blog/
+│   │   └── details/blog-details.jpg
+│   ├── categories/
+│   │   ├── category-1.jpg
+│   │   └── category-5.jpg
+│   ├── product/
+│   │   ├── product-1.jpg
+│   │   └── details/product-1.jpg
+│   ├── shop/
+│   │   ├── shop-1.jpg
+│   │   └── shop-9.jpg
+│   └── payment/
+│       ├── payment-1.png
+│       └── payment-5.png
+├── js/
+│   ├── _load-order-fix.txt
+│   ├── _search-fix.js
+│   ├── account.js
+│   ├── admin-inventory.js
+│   ├── api-config.js
+│   ├── app.js
+│   ├── auth.js
+│   ├── checkout.js
+│   ├── intro.js
+│   ├── main.js
+│   ├── mixitup.min.js
+│   ├── orders.js
+│   ├── product-details-populate.js
+│   ├── product-reviews.js
+│   ├── products.js
+│   ├── promotions.js
+│   ├── search-pagination.js
+│   ├── shop-search.js
+│   └── vendor libs (jquery, bootstrap, owl carousel, etc.)
+├── sass/
+│   ├── _base.scss
+│   ├── _header.scss
+│   ├── _footer.scss
+│   ├── _home-page.scss
+│   ├── _product.scss
+│   ├── _shop.scss
+│   └── style.scss
+├── scripts/
+│   ├── generate-api-config.js
+│   └── e2e_curl.sh
+└── Source/ (third-party zips and reference assets)
+
+```
