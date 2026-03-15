@@ -22,6 +22,44 @@
   function ordersMap(){ return load(STORAGE_KEYS.ORDERS, {}); }
   function saveOrders(m){ save(STORAGE_KEYS.ORDERS, m); }
 
+  function mergeItemsByProduct(existing, incoming){
+    const merged = Array.isArray(existing) ? existing.slice() : [];
+    (Array.isArray(incoming) ? incoming : []).forEach(function(item){
+      const pid = item && (item.product_id || item.id);
+      const name = item && item.name;
+      const qty = Number(item && item.quantity || 0);
+      if (!qty) return;
+      const hit = merged.find(function(m){
+        if (pid && (m.product_id === pid || m.id === pid)) return true;
+        return !!(name && m.name === name);
+      });
+      if (hit) {
+        hit.quantity = Number(hit.quantity || 0) + qty;
+      } else {
+        merged.push(Object.assign({}, item, { quantity: qty }));
+      }
+    });
+    return merged;
+  }
+
+  function moveGuestDataToUser(userId, carts, orders){
+    if (!userId) return;
+    const gKey = 'guest:' + guestId();
+    const userCart = carts[userId] || [];
+    const guestCart = carts[gKey] || [];
+    carts[userId] = mergeItemsByProduct(userCart, guestCart);
+    if (guestCart.length) delete carts[gKey];
+    saveCarts(carts);
+
+    const userOrders = orders[userId] || [];
+    const guestOrders = orders[gKey] || [];
+    if (guestOrders.length) {
+      orders[userId] = userOrders.concat(guestOrders);
+      delete orders[gKey];
+      saveOrders(orders);
+    }
+  }
+
   function session(){ return load(STORAGE_KEYS.SESSION, null); }
   function setSession(s){ save(STORAGE_KEYS.SESSION, s); }
   function clearSession(){ localStorage.removeItem(STORAGE_KEYS.SESSION); }
@@ -42,6 +80,13 @@
   }
 
   function jsonResponse(obj, status=200){ return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } }); }
+
+  function normalizeProduct(p, index){
+    const fallbackInventory = 10 + ((index || 0) % 7);
+    const inv = Number(p && p.inventory);
+    const inventory = Number.isFinite(inv) ? inv : fallbackInventory;
+    return Object.assign({}, p, { inventory: Math.max(0, inventory) });
+  }
 
   const origFetch = window.fetch.bind(window);
 
@@ -93,13 +138,21 @@
         users[id] = { id, name, email, password };
         saveUsers(users);
         setSession({ userId: id });
+        moveGuestDataToUser(id, carts, orders);
         return jsonResponse({ id, name, email }, 200);
       }
 
       if (url === '/api/auth/login' && method.toUpperCase() === 'POST'){
         const email = (body && body.email || '').toLowerCase();
         const password = (body && body.password) || '';
-        for (const k in users){ const u = users[k]; if (u.email === email && u.password === password){ setSession({ userId: u.id }); return jsonResponse({ id: u.id, name: u.name, email: u.email }, 200); } }
+        for (const k in users){
+          const u = users[k];
+          if (u.email === email && u.password === password){
+            setSession({ userId: u.id });
+            moveGuestDataToUser(u.id, carts, orders);
+            return jsonResponse({ id: u.id, name: u.name, email: u.email }, 200);
+          }
+        }
         return jsonResponse({ error: 'Invalid credentials' }, 401);
       }
 
@@ -139,7 +192,9 @@
 
       // PRODUCTS: read from global PRODUCT_DATA if available
       if (parts[0] === 'products'){
-        const all = (window.PRODUCT_DATA && Object.keys(window.PRODUCT_DATA).length) ? Object.values(window.PRODUCT_DATA) : [];
+        const all = (window.PRODUCT_DATA && Object.keys(window.PRODUCT_DATA).length)
+          ? Object.values(window.PRODUCT_DATA).map(normalizeProduct)
+          : [];
         // GET /api/products or /api/products?q=...
         if (!parts[1] && method.toUpperCase() === 'GET'){
           try {

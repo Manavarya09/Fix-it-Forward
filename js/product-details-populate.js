@@ -68,6 +68,7 @@
     // Add to cart button
     const cartBtn = document.querySelector('.cart-btn');
     if (cartBtn) {
+      window.__pdCartHandlerActive = true;
       function updateInventoryUI() {
         // show inventory count
         const infoWrap = document.querySelector('.product__details__text');
@@ -79,7 +80,8 @@
             invEl.style.marginTop = '8px';
             infoWrap.appendChild(invEl);
           }
-          const inv = Number(product.inventory || 0);
+          const rawInv = Number(product.inventory);
+          const inv = Number.isFinite(rawInv) ? rawInv : 999;
           if (inv > 0) {
             invEl.textContent = 'In stock: ' + inv;
             cartBtn.disabled = false;
@@ -99,7 +101,8 @@
       cartBtn.addEventListener('click', function(e){
         e.preventDefault();
         const qty = parseInt(document.querySelector('.pro-qty input').value) || 1;
-        const inv = Number(product.inventory || 0);
+        const rawInv = Number(product.inventory);
+        const inv = Number.isFinite(rawInv) ? rawInv : 999;
         if (inv <= 0) {
           try { showToast('Sorry — this item is out of stock.'); } catch(e) { alert('Out of stock'); }
           return;

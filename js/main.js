@@ -305,6 +305,29 @@
         $('.icon_heart_alt').siblings('.tip').text(wishlistCount);
     }
 
+    function renderAuthUI(user) {
+        var label = user && user.name ? ('Hi, ' + user.name.split(' ')[0]) : 'My Account';
+        $('.header__right__auth, .offcanvas__auth').each(function(){
+            if (user) {
+                $(this).html('<a href="./account.html" class="account-link">' + label + '</a> <a href="#" class="logout-link">Logout</a>');
+            } else {
+                $(this).html('<a href="./login.html">Login</a> <a href="./login.html?action=register">Register</a>');
+            }
+        });
+
+        // Side account menus on account/orders pages.
+        $('.cart__total__procced a').each(function(){
+            var txt = ($(this).text() || '').trim().toLowerCase();
+            if (txt === 'logout') {
+                if (user) {
+                    $(this).attr('href', '#').addClass('logout-link');
+                } else {
+                    $(this).attr('href', './login.html').removeClass('logout-link');
+                }
+            }
+        });
+    }
+
     function saveCart() {
         localStorage.setItem('cart', JSON.stringify(cart));
         updateCounts();
@@ -521,6 +544,7 @@
         fetch('/api/me', { credentials: 'include' }).then(r=>r.json()).then(d=>{
             if (d && d.user) {
                 apiUser = d.user;
+                renderAuthUI(apiUser);
                 // try to load server cart
                 fetch('/api/cart', { credentials: 'include' }).then(r=>r.json()).then(cdata=>{
                     if (cdata && Array.isArray(cdata.items)) {
@@ -528,8 +552,14 @@
                         saveCart();
                     }
                 }).catch(()=>{});
+            } else {
+                apiUser = null;
+                renderAuthUI(null);
             }
-        }).catch(()=>{});
+        }).catch(function(){
+            apiUser = null;
+            renderAuthUI(null);
+        });
     }
 
     window.initAppUI = initAppUI;
@@ -567,7 +597,8 @@
             if (!r.ok) throw new Error('not found');
             return r.json();
         }).then(function(prod){
-            var inv = Number(prod.inventory || 0);
+            var inv = Number(prod.inventory);
+            if (!Number.isFinite(inv)) inv = 999;
             if (inv <= 0) {
                 try { showToast('Sorry — this item is out of stock.'); } catch(e){ alert('Out of stock'); }
                 return;
@@ -619,10 +650,12 @@
     });
 
     $(document).on('click', '.product__details__button .cart-btn', function(e) {
+        if (window.__pdCartHandlerActive) return;
         e.preventDefault();
         var qty = parseInt($('.product__details__button .pro-qty input').val(), 10) || 1;
         if (!window.currentProduct) return;
-        var inv = Number(window.currentProduct.inventory || 0);
+        var inv = Number(window.currentProduct.inventory);
+        if (!Number.isFinite(inv)) inv = 999;
         if (inv <= 0) { try { showToast('Sorry — this item is out of stock.'); } catch(e){ alert('Out of stock'); } return; }
         if (qty > inv) { try { showToast('Only ' + inv + ' left in stock.'); } catch(e){ alert('Not enough stock'); } return; }
         addToCart({
@@ -650,16 +683,16 @@
         $(this).find('input, textarea').val('');
     });
 
-    $(document).on('submit', '.login-form', function (e) {
+    $(document).on('click', '.logout-link', function (e) {
         e.preventDefault();
-        alert("Login successful!");
-        window.location.href = 'index.html';
-    });
-
-    $(document).on('submit', '.register-form', function (e) {
-        e.preventDefault();
-        alert("Registration successful!");
-        window.location.href = 'index.html';
+        fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            .catch(function(){})
+            .finally(function(){
+                apiUser = null;
+                renderAuthUI(null);
+                showToast('Logged out');
+                window.location.href = 'index.html';
+            });
     });
 
     $(document).on('submit', '.discount-form', function (e) {

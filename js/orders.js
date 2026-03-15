@@ -26,7 +26,12 @@
     const tr = document.createElement('tr');
     tr.className = 'order-details-row';
     tr.id = `details-${order.id}`;
-    const markup = items.length ? '<ul>' + items.map(it=>`<li>${it.name || it.product_id} × ${it.quantity} — AED '+(parseFloat(it.price||0).toFixed(2))+'</li>`).join('') + '</ul>' : '<p>No items</p>';
+    const markup = items.length
+      ? '<ul>' + items.map(function(it){
+          const lineTotal = (parseFloat(it.price || 0) * Number(it.quantity || 1)).toFixed(2);
+          return `<li>${it.name || it.product_id} x ${it.quantity} - AED ${lineTotal}</li>`;
+        }).join('') + '</ul>'
+      : '<p>No items</p>';
     tr.innerHTML = `<td colspan="5">${markup}</td>`;
     return tr;
   }
